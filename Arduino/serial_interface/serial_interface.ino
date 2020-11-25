@@ -1,15 +1,19 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
+
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 int incomingByte = 0;    // for incoming serial data
-int currentCommands[8] = {750, 750, 750, 750, 750, 750, 750, 750}; // initial servo positions
+int currentCommands[8] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; // initial servo positions
 int servoPositionOffset = 8;
+
+int maxPulse = 2400;
+int minPulse = 600;
 
 unsigned int raw_command = 0;
 #define SERVO_FREQ 50 // Analog servos run at ~50 Hz updates
 
-int granularity = 2;
+int granularity = 1;
 
 void setup() {
   Serial.begin(9600);    // opens serial port, sets data rate to 9600 bps
@@ -29,17 +33,19 @@ void loop() {
       bool is_last_bit = (incomingByte & 128) == 128;
       if (is_last_bit) {
         int servo_id = raw_command & 7;
-        int servo_pos = raw_command >> 3;
+        int servo_pos = (raw_command >> 3) + minPulse;
+        if (servo_pos > maxPulse) {
+          servo_pos = maxPulse;
+        }
         currentCommands[servo_id] = servo_pos;
         raw_command = 0;
       }
     }
   }
   for (int i = 0; i < 8; i++) {
-   uint16_t raw_servo_id = i + servoPositionOffset;
-    uint16_t raw_ms_command = currentCommands[i]*granularity;
-Serial.println(String(raw_servo_id) + ", " +String(raw_ms_command));
+    uint16_t raw_servo_id = i + servoPositionOffset;
+    uint16_t raw_ms_command = (currentCommands[i] * granularity);
     pwm.writeMicroseconds(raw_servo_id, raw_ms_command);
   }
-  delay(50);
+  delay(10);
 }
