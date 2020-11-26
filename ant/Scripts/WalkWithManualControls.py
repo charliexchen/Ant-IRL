@@ -1,23 +1,18 @@
 #!/usr/bin/python
 import pygame
 from pygame.locals import *
-from ArduinoSerial import ArduinoSerial
-from WalktCycleConfigParser import WalkCycle
+from ServoController.SerialServoController import SerialServoController
+from ServoController.WalktCycleConfigParser import WalkCycle
 
-# This is hacked together in ¬5 min just to have some fun. Will need to go back to fix this
 pygame.init()
-pygame.font.init()
+clock = pygame.time.Clock()
 
-width, height = 400, 300
-screen = pygame.display.set_mode((width, height))
-
-arduino_controller = ArduinoSerial('/dev/ttyUSB1')
+arduino_controller = SerialServoController('/dev/ttyUSB1')
 walk_cycle_forward = WalkCycle("WalkConfigs/simple_walk_config.yaml").get_commands()
 walk_cycle_back = WalkCycle("WalkConfigs/simple_walk_back_config.yaml").get_commands()
 walk_cycle_left = WalkCycle("WalkConfigs/simple_walk_left_turn_config.yaml").get_commands()
 walk_cycle_right = WalkCycle("WalkConfigs/simple_walk_right_turn_config.yaml").get_commands()
 command = {}
-clock = pygame.time.Clock()
 current_command = None
 try:
     while True:

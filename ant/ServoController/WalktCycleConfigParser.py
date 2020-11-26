@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import yaml
 import numpy as np
-from ServoIDConfig import MAX_SERVO_COUNT, get_servo_id
+from ServoController.ServoIDConfig import MAX_SERVO_COUNT, get_servo_id
 
 from typing import Union
 
@@ -12,6 +12,7 @@ class WalkCycle:
         self.key_frames = []
         self.wait_frames = []
         self._get_walk_cycle_frames()
+        self.all_frames = None
 
     def _get_walk_cycle_frames(self):  # install np typing later to fix hthis
         def get_keyframe(raw_key_frame_):
@@ -66,18 +67,42 @@ class WalkCycle:
             current_frame = next(frames)
             yield self.frame_to_command(current_frame)
 
-    def get_training_data(self):
+    def get_training_data(self, steps=3):
         commands = self._get_frames()
-        current_frame = next(commands)
-        next_frame = next(commands)
+        input_frames = []
+        for _ in range(steps):
+            input_frames.append(next(commands))
+        label_frame = next(commands)
         while True:
-            yield current_frame, next_frame
-            current_frame = next_frame
-            next_frame = next(commands)
+            yield np.concatenate(input_frames), label_frame
+            input_frames.append(label_frame)
+            input_frames.pop(0)
+            label_frame = next(commands)
+
+    def _get_all_frames(self):
+        frames = []
+        frame_generator = self._get_frames()
+        for _ in range(len(sum(wait_frames))):
+            frames.append(next(frame_generator))
+        return frames
+
+    def get_next_frame(self, current_frame):
+        if self.all_frames is None:
+            self._get_all_frames()
+        min_ind = 0
+        min_distance = np.linalg.norm(current_frame - self.all_frames[0])
+        for i, frame in enumerate(self.all_frames):
+            dist = np.linalg.norm(current_frame - self.all_frames[0])
+            if dist < min_distance:
+                min_ind = i
+                min_distance = dist
+        return self.all_frames[(min_ind+1)%len(self.all_frames)]
+
+
 
 
 if __name__ == "__main__":
-    wc = WalkCycle("WalkConfigs/simple_walk_config.yaml")
+    wc = WalkCycle("../WalkConfigs/simple_walk_config.yaml")
     walk = wc.get_commands()
     for _ in range(20):
         print(next(walk))

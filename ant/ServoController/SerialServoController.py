@@ -2,11 +2,11 @@
 import time
 import numpy as np
 import serial
-from ServoIDConfig import MAX_PULSE, MIN_PULSE, MAX_SERVO_COUNT, is_inverted
-from WalktCycleConfigParser import WalkCycle
+from ServoController.ServoIDConfig import MAX_PULSE, MIN_PULSE, MAX_SERVO_COUNT, is_inverted
+from ServoController.WalktCycleConfigParser import WalkCycle
 
 
-class ArduinoSerial:
+class SerialServoController:
     PULSE_GRANULARITY_16BIT_8SERVOS = 1
 
     def __init__(self, port: int, baudrate: int = 9600):
@@ -16,11 +16,9 @@ class ArduinoSerial:
 
     @staticmethod
     def _get_16bit_servo_command(servo_id: int, position: int) -> bytes:
-
         position = np.clip(position, MIN_PULSE, MAX_PULSE)
-        print(position)
         assert servo_id < MAX_SERVO_COUNT, 'Error -- Servo ID exceeds max servo count'
-        discretized_position = int((position - MIN_PULSE) / ArduinoSerial.PULSE_GRANULARITY_16BIT_8SERVOS)
+        discretized_position = int((position - MIN_PULSE) / SerialServoController.PULSE_GRANULARITY_16BIT_8SERVOS)
         command = (discretized_position << 3) + servo_id
         assert command >> 14 == 0, 'Error command exceeds 16 bits'
         second_byte = (command & 127) | 128
@@ -58,7 +56,7 @@ class ArduinoSerial:
 
 
 if __name__ == '__main__':
-    arduino_controller = ArduinoSerial('/dev/ttyUSB1')
+    arduino_controller = SerialServoController('/dev/ttyUSB1')
     walk_cycle = WalkCycle("WalkConfigs/simple_walk_left_turn_config.yaml").get_commands()
     try:
         i = 0
