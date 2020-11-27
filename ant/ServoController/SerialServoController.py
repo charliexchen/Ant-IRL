@@ -9,7 +9,7 @@ from ServoController.WalktCycleConfigParser import WalkCycle
 class SerialServoController:
     PULSE_GRANULARITY_16BIT_8SERVOS = 1
 
-    def __init__(self, port: int, baudrate: int = 9600):
+    def __init__(self, port: str, baudrate: int = 9600):
         self.ser = serial.Serial(port, baudrate=baudrate)
         self.ser.timeout = 0.024
         self.current_command = {servo_id: self.centre() for servo_id in range(MAX_SERVO_COUNT)}
@@ -56,7 +56,7 @@ class SerialServoController:
 
 
 if __name__ == '__main__':
-    arduino_controller = SerialServoController('/dev/ttyUSB1')
+    arduino_controller = SerialServoController('/dev/ttyUSB0')
     walk_cycle = WalkCycle("WalkConfigs/simple_walk_left_turn_config.yaml").get_commands()
     try:
         i = 0

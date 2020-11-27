@@ -7,7 +7,8 @@ from ServoController.WalktCycleConfigParser import WalkCycle
 pygame.init()
 clock = pygame.time.Clock()
 
-arduino_controller = SerialServoController('/dev/ttyUSB1')
+pygame.display.set_mode()
+arduino_controller = SerialServoController('/dev/ttyUSB0')
 walk_cycle_forward = WalkCycle("WalkConfigs/simple_walk_config.yaml").get_commands()
 walk_cycle_back = WalkCycle("WalkConfigs/simple_walk_back_config.yaml").get_commands()
 walk_cycle_left = WalkCycle("WalkConfigs/simple_walk_left_turn_config.yaml").get_commands()

@@ -10,12 +10,11 @@ import os
 from functools import partial
 
 
-class AntController:
-    def __init__(self, net, loss, learning_rate, decay, rng, steps=3, name="Ant"):
+class HaikuPredictorTrainer:
+    def __init__(self, predictor, loss, learning_rate, decay, rng, steps=1, name="Ant"):
         self.training_data = WalkCycle().get_training_data(steps)
         state, _label = next(input_dataset)
-
-        net_t = hk.without_apply_rng(hk.transform(net))
+        net_t = hk.without_apply_rng(hk.transform(predictor))
         self.params = net_t.init(rng, state)
 
         def _loss(params, old_states, new_states, learning_rate):
@@ -50,19 +49,44 @@ class AntController:
 
     def save_params(self, file_name=None):
         if file_name is None:
-            if not os.path.exists(f"NetConfigs/{self.name}"):
-                os.makedirs(f"NetConfigs/{self.name}")
-            file_name = f"NetConfigs/{self.name}/params_{self.generations}_gen.p"
+            if not os.path.exists(f"configs/{self.name}"):
+                os.makedirs(f"configs/{self.name}")
+            file_name = f"configs/{self.name}/params_{self.generations}_gen.p"
         pickle.dump(self.params, open(file_name, "wb"))
 
     def get_params(self, file_name=None):
         if file_name is None:
             max_gen = -1
-            for file_name_ in os.listdir(f"NetConfigs/{self.name}/"):
+            for file_name_ in os.listdir(f"configs/{self.name}/"):
                 generation = int("".join([s for s in file_name_ if s.isdigit()]))
                 if generation > max_gen:
                     file_name = file_name_
         self.params = pickle.load(open(file_name, "rb"))
+
+
+class HyperParamEvolution:
+    @staticmethod
+    def generate_controller_from_config(config):
+        def gen_mlp(mlp_config, current_position):
+            layers = []
+            for layer in mlp_config["layers"]:
+                if layer["type"] == "linear":
+                    layers.append(hk.Linear(layer["size"]))
+                elif layer["type"] == "sigmoid":
+                    layers.append(jax.nn.sigmoid)
+                elif layer["type"] == "relu":
+                    layers.append(jax.nn.relu)
+            mlp = hk.Sequential(layers)
+            return mlp(current_position) * mlp_config["scale"] + mlp_config["shift"]
+
+        predictor = partial(gen_mlp, config["mlp"])
+        if config['loss'] == "squared_loss":
+            loss = squared_loss
+        else:
+            raise UserError("Valid loss function not provided")
+        rng = jax.random.PRNGKey(config["rng_key"])
+        return HaikuPredictorTrainer(predictor, loss, config["learning_rate"], config["decay"], rng,
+                                     config["steps"], config["ant"])
 
 
 def squared_loss(predictions, labels):
@@ -77,11 +101,10 @@ def net(current_position):
     ])
     return mlp(current_position)
 
-
+rng = jax.random.PRNGKey(42)
 input_dataset = WalkCycle().get_training_data(1)
 
-rng = jax.random.PRNGKey(42)
-ac = AntController(net, squared_loss, 0.01, 0.999, rng, 1)
+ac = HaikuPredictorTrainer(net, squared_loss, 0.01, 0.999, rng, 1)
 print("start!")
 c = 0
 loss = 1
@@ -102,7 +125,7 @@ try:
 
         images = np.random.normal(images, 0.1)
         ac._train_batch(images, labels)
-        if c %  (256*10 )== 0:
+        if c % (256 * 10) == 0:
             loss = ac.get_loss(images, labels)
             print(ac.generations, loss)
     ac.save_params()

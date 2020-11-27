@@ -28,7 +28,7 @@ steps = [next(commands), next(commands), next(commands)]
 print(steps)
 net_t = hk.transform(net)
 net_t.init(rng, current_position)
-params = pickle.load(open("NetConfigs/params_interrupted.p", "rb"))
+params = pickle.load(open("configs/params_interrupted.p", "rb"))
 
 evaluate = jax.jit(net_t.apply)
 
