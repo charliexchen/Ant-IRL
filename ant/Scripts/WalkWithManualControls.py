@@ -1,40 +1,55 @@
 #!/usr/bin/python
+import operator
+
 import pygame
 from pygame.locals import *
+
 from ServoController.SerialServoController import SerialServoController
-from ServoController.WalktCycleConfigParser import WalkCycle
+from ServoController.WalktCycleConfigParser import UnifiedFixedWalkController, WalkCommand
 
 pygame.init()
 clock = pygame.time.Clock()
 
 pygame.display.set_mode()
 arduino_controller = SerialServoController('/dev/ttyUSB0')
-walk_cycle_forward = WalkCycle("WalkConfigs/simple_walk_config.yaml").get_commands()
-walk_cycle_back = WalkCycle("WalkConfigs/simple_walk_back_config.yaml").get_commands()
-walk_cycle_left = WalkCycle("WalkConfigs/simple_walk_left_turn_config.yaml").get_commands()
-walk_cycle_right = WalkCycle("WalkConfigs/simple_walk_right_turn_config.yaml").get_commands()
-command = {}
-current_command = None
+walk_cycle_controller = UnifiedFixedWalkController()
+
+key_to_command_map = {
+    K_w: WalkCommand.FORWARD,
+    K_a: WalkCommand.LEFT,
+    K_s: WalkCommand.BACK,
+    K_d: WalkCommand.RIGHT,
+    K_q: WalkCommand.LEFT_TURN,
+    K_e: WalkCommand.RIGHT_TURN,
+}
+frame_counter = 0
+default_to_idle_counter = 0
+keyboard_commands = {}
+
 try:
     while True:
+        frame_counter += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit(0)
             if event.type == pygame.KEYDOWN:
-                if event.key == K_UP:
-                    current_command = walk_cycle_forward
-                elif event.key == K_LEFT:
-                    current_command = walk_cycle_left
-                elif event.key == K_DOWN:
-                    current_command = walk_cycle_back
-                elif event.key == K_RIGHT:
-                    current_command = walk_cycle_right
+                if event.key in key_to_command_map:
+                    keyboard_commands[key_to_command_map[event.key]] = frame_counter
             if event.type == pygame.KEYUP:
-                current_command = None
-        if current_command:
-            command = next(current_command)
-            arduino_controller.send(command)
+                if event.key in key_to_command_map:
+                    keyboard_commands.pop(key_to_command_map[event.key])
+        keyboard_command = None
+        if len(keyboard_commands) == 0:
+            default_to_idle_counter -= 1
+            if default_to_idle_counter < 0:
+                keyboard_command = WalkCommand.IDLE
+        else:
+            keyboard_command = max(keyboard_commands.items(), key=operator.itemgetter(1))[0]
+            default_to_idle_counter = 20
+        if keyboard_command is not None:
+            serial_command = walk_cycle_controller.get_next_step(WalkCommand.IDLE)
+            arduino_controller.send({id: com for id, com in enumerate(serial_command)})
         clock.tick(20)
 finally:
     arduino_controller.send_centre_command()

@@ -1,14 +1,14 @@
 #!/usr/bin/python
-import haiku as hk
-import jax.numpy as jnp
-import jax
-from jax import jit
-import numpy as np
-from ServoController.WalktCycleConfigParser import WalkCycle
-import pickle
 import os
+import pickle
 from functools import partial
 
+import haiku as hk
+import jax
+import jax.numpy as jnp
+import numpy as np
+
+from ServoController.WalktCycleConfigParser import WalkCycle
 
 class HaikuPredictorTrainer:
     def __init__(self, predictor, loss, learning_rate, decay, rng, steps=1, name="Ant"):
@@ -83,7 +83,7 @@ class HyperParamEvolution:
         if config['loss'] == "squared_loss":
             loss = squared_loss
         else:
-            raise UserError("Valid loss function not provided")
+            raise ValueError("Valid loss function not provided")
         rng = jax.random.PRNGKey(config["rng_key"])
         return HaikuPredictorTrainer(predictor, loss, config["learning_rate"], config["decay"], rng,
                                      config["steps"], config["ant"])
@@ -97,38 +97,60 @@ def net(current_position):
     mlp = hk.Sequential([
         hk.Linear(256), jax.nn.sigmoid,
         hk.Linear(256), jax.nn.sigmoid,
+        hk.Linear(256), jax.nn.sigmoid,
         hk.Linear(8)
     ])
     return mlp(current_position)
 
+
 rng = jax.random.PRNGKey(42)
 input_dataset = WalkCycle().get_training_data(1)
 
-ac = HaikuPredictorTrainer(net, squared_loss, 0.01, 0.999, rng, 1)
+ac = HaikuPredictorTrainer(net, squared_loss, 0.0001, 0.9999, rng, 1)
 print("start!")
 c = 0
 loss = 1
-
+current_pos, next_pos = next(input_dataset)
+l = []
 try:
     while True:
-        # import pdb;pdb.set_trace()
-        images = []
-        labels = []
+        ac._train_batch(np.asarray([current_pos]), np.asarray([next_pos]))
+        _current_pos, next_pos = next(input_dataset)
+        current_pos = ac.evaluate(current_pos)
+        label = next_pos-current_pos
+        l.append(ac.get_loss(np.asarray([current_pos]), np.asarray([next_pos])))
+        c+=1
+        if len(l)>1000:
+            l.pop(0)
 
-        for _ in range(256):
-            c += 1
-            img, lab = next(input_dataset)
-            images.append(img)
-            labels.append(lab)
-        images = np.array(images)
-        labels = np.array(labels)
+        if c % 100 == 0:
+            print(sum(l)/len(l))
+except KeyboardInterrupt():
+    ac.save_params()
 
-        images = np.random.normal(images, 0.1)
-        ac._train_batch(images, labels)
-        if c % (256 * 10) == 0:
-            loss = ac.get_loss(images, labels)
-            print(ac.generations, loss)
-    ac.save_params()
-except KeyboardInterrupt:
-    "saving parameters..."
-    ac.save_params()
+
+
+#
+# try:
+#     while True:
+#         # import pdb;pdb.set_trace()
+#         images = []
+#         labels = []
+#
+#         for _ in range(256):
+#             c += 1
+#             img, lab = next(input_dataset)
+#             images.append(img)
+#             labels.append(lab)
+#         images = np.array(images)
+#         labels = np.array(labels)
+#
+#         images = np.random.normal(images, 0.1)
+#         ac._train_batch(images, labels)
+#         if c % (256 * 10) == 0:
+#             loss = ac.get_loss(images, labels)
+#             print(ac.generations, loss)
+#     ac.save_params()
+# except KeyboardInterrupt:
+#     "saving parameters..."
+#     ac.save_params()

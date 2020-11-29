@@ -24,6 +24,13 @@ INVERTED_SERVOS = {
     Servos.BACK_LEFT_LEG
 }
 
+SPEED_DEPENDENT_SERVOS = {
+    Servos.FRONT_RIGHT_HIP,
+    Servos.BACK_RIGHT_HIP,
+    Servos.BACK_LEFT_HIP,
+    Servos.BACK_RIGHT_HIP
+}
+
 SERVO_ENUM_TO_ID_MAP = {"front_right_hip": 0,
                         "front_left_hip": 1,
                         "back_left_hip": 2,
@@ -46,7 +53,12 @@ def get_servo_id(servo: Union[Servos, str, int]) -> int:
 
 
 INVERTED_SERVO_IDS = {get_servo_id(servo) for servo in INVERTED_SERVOS}
+SPEED_DEPENDENT_SERVO_IDS = {get_servo_id(servo) for servo in SPEED_DEPENDENT_SERVOS}
 
 
 def is_inverted(servo: Union[int, Servos]) -> bool:
     return servo in INVERTED_SERVO_IDS or servo in INVERTED_SERVOS
+
+
+def is_speed_dependent(servo: Union[int, Servos]) -> bool:
+    return servo in SPEED_DEPENDENT_SERVO_IDS or servo in SPEED_DEPENDENT_SERVOS
