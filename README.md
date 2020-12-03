@@ -5,10 +5,18 @@ Ant(ony) is now a fairly standard RL task from the Open AI gym library. For fun,
 Here is the Plan:
 - Build Ant(ony).
   - CAD in Solid Edge Community Edition
-![alt text](https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant.png)
+  <p align="center">
+  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant.png" width="400" ></a>
+  </p>
   - Build the robot
+  <p align="center">
+  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant_irl.png" align="centre" width="400" ></a>
+  </p>
   - Code serial interface between arduino and python
-- build classical control/fixed loop control system using raspberry pr zero/arduino nano.
+- build classical control/fixed loop control system using raspberry pi zero/arduino nano.
+<p align="center">
+  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/walk.gif" align="centre" width="400" ></a>
+  </p>
 - build a test environment.
   - use open CV to detect position using a QR code to calculate reward
   - use the classical control walk to reset the environment
