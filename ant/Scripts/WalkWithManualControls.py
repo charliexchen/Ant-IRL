@@ -11,7 +11,7 @@ pygame.init()
 clock = pygame.time.Clock()
 
 pygame.display.set_mode()
-arduino_controller = SerialServoController('/dev/ttyUSB1')
+arduino_controller = SerialServoController('/dev/ttyUSB0')
 walk_cycle_controller = UnifiedFixedWalkController()
 
 key_to_command_map = {

@@ -28,7 +28,7 @@ SPEED_DEPENDENT_SERVOS = {
     Servos.FRONT_RIGHT_HIP,
     Servos.BACK_RIGHT_HIP,
     Servos.BACK_LEFT_HIP,
-    Servos.BACK_RIGHT_HIP
+    Servos.FRONT_LEFT_HIP
 }
 
 SERVO_ENUM_TO_ID_MAP = {"front_right_hip": 0,
@@ -61,4 +61,5 @@ def is_inverted(servo: Union[int, Servos]) -> bool:
 
 
 def is_speed_dependent(servo: Union[int, Servos]) -> bool:
+    print(SPEED_DEPENDENT_SERVOS)
     return servo in SPEED_DEPENDENT_SERVO_IDS or servo in SPEED_DEPENDENT_SERVOS

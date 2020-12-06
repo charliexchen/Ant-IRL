@@ -10,7 +10,8 @@ from ServoController.ServoIDConfig import get_servo_id
 
 
 class WalkCycle:
-    def __init__(self, path="../WalkConfigs/simple_walk_forward_config.yaml", speed=1.0):
+    """Imports a yaml file which contains the keyframes of a walkcycle"""
+    def __init__(self, path="WalkConfigs/simple_walk_forward_config.yaml", speed=1.0):
         self.path = path
         self.key_frames = []
         self.wait_frames = []
@@ -18,7 +19,7 @@ class WalkCycle:
         self._get_walk_cycle_frames()
         self.all_frames = None
 
-    def _get_walk_cycle_frames(self):  # install np typing later to fix this
+    def _get_walk_cycle_frames(self):  # install np typing later to fix this typing
         def get_keyframe(raw_key_frame_, speed):
             key_frame_ = np.zeros(MAX_SERVO_COUNT)
             wait_frames_ = 0
@@ -26,8 +27,9 @@ class WalkCycle:
                 if key == "frames_to_next_keyframe":
                     wait_frames_ = raw_key_frame[key]
                 else:
-                    multiplier = speed if is_speed_dependent(key) else 1.0
-                    key_frame_[get_servo_id(key)] = raw_key_frame_[key] * multiplier
+                    servo_id = get_servo_id(key)
+                    multiplier = speed if is_speed_dependent(servo_id) else 1.0
+                    key_frame_[servo_id] = raw_key_frame_[key] * multiplier
             return key_frame_, wait_frames_
 
         with open(self.path) as file:
@@ -128,6 +130,7 @@ class WalkCommand(Enum):
 
 
 class UnifiedFixedWalkController:
+    """Stores a set of fixed walk cycles, and then returns/interpolates between them based on incoming commands"""
     DEFAULT_WALK_CYCLE_MAP = {
         WalkCommand.IDLE: "WalkConfigs/simple_walk_idle_config.yaml",
         WalkCommand.FORWARD: "WalkConfigs/simple_walk_forward_config.yaml",
@@ -138,11 +141,12 @@ class UnifiedFixedWalkController:
         WalkCommand.RIGHT_TURN: "WalkConfigs/simple_walk_right_turn_config.yaml",
     }
 
-    def __init__(self, command_to_walk_cycle_config_map=None,
+    def __init__(self, speed=1.0, command_to_walk_cycle_config_map=None,
                  initial_position=None):
         if command_to_walk_cycle_config_map is None:
             command_to_walk_cycle_config_map = self.DEFAULT_WALK_CYCLE_MAP
-        self.command_to_walk_cycle = {command: WalkCycle("../"+walk_cycle_config) for command, walk_cycle_config in
+        self.command_to_walk_cycle = {command: WalkCycle(walk_cycle_config, speed=speed) for command, walk_cycle_config
+                                      in
                                       command_to_walk_cycle_config_map.items()}
         self.previous_command = None
         self.current_walk_cycle_generator = None
