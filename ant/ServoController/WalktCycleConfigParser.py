@@ -10,7 +10,7 @@ from ServoController.ServoIDConfig import get_servo_id
 
 
 class WalkCycle:
-    def __init__(self, path="WalkConfigs/simple_walk_forward_config.yaml", speed=1.0):
+    def __init__(self, path="../WalkConfigs/simple_walk_forward_config.yaml", speed=1.0):
         self.path = path
         self.key_frames = []
         self.wait_frames = []
@@ -142,7 +142,7 @@ class UnifiedFixedWalkController:
                  initial_position=None):
         if command_to_walk_cycle_config_map is None:
             command_to_walk_cycle_config_map = self.DEFAULT_WALK_CYCLE_MAP
-        self.command_to_walk_cycle = {command: WalkCycle(walk_cycle_config) for command, walk_cycle_config in
+        self.command_to_walk_cycle = {command: WalkCycle("../"+walk_cycle_config) for command, walk_cycle_config in
                                       command_to_walk_cycle_config_map.items()}
         self.previous_command = None
         self.current_walk_cycle_generator = None
