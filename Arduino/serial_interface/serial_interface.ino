@@ -48,4 +48,5 @@ void loop() {
     pwm.writeMicroseconds(raw_servo_id, raw_ms_command);
   }
   delay(10);
+  pwm.writeMicroseconds(0, 1500);
 }

@@ -95,9 +95,7 @@ def squared_loss(predictions, labels):
 
 def net(current_position):
     mlp = hk.Sequential([
-        hk.Linear(256), jax.nn.sigmoid,
-        hk.Linear(256), jax.nn.sigmoid,
-        hk.Linear(256), jax.nn.sigmoid,
+        hk.Linear(2048), jax.nn.sigmoid,
         hk.Linear(8)
     ])
     return mlp(current_position)
@@ -106,7 +104,7 @@ def net(current_position):
 rng = jax.random.PRNGKey(42)
 input_dataset = WalkCycle().get_training_data(1)
 
-ac = HaikuPredictorTrainer(net, squared_loss, 0.0001, 0.9999, rng, 1)
+ac = HaikuPredictorTrainer(net, squared_loss, 0.001, 0.999999, rng, 1)
 print("start!")
 c = 0
 loss = 1
@@ -125,8 +123,9 @@ try:
 
         if c % 100 == 0:
             print(sum(l)/len(l))
-except KeyboardInterrupt():
+except KeyboardInterrupt:
     ac.save_params()
+    print('Saving Parameters')
 
 
 

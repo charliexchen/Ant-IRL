@@ -7,7 +7,7 @@
   "front_left_leg" : 1.0
   "back_left_leg"  : 0.8
   "back_right_leg" : 1.0
-  "frames_to_next_keyframe" : 10
+  "frames_to_next_keyframe" : 5
 1:
   "front_right_hip": -0.5
   "front_left_hip" : -0.5
@@ -17,7 +17,7 @@
   "front_left_leg" : 1.0
   "back_left_leg"  : 0.8
   "back_right_leg" : 1.0
-  "frames_to_next_keyframe" : 5
+  "frames_to_next_keyframe" : 1
 2:
   "front_right_hip": -0.5
   "front_left_hip" : -0.5
@@ -27,7 +27,7 @@
   "front_left_leg" : 0.8
   "back_left_leg"  : 1.0
   "back_right_leg" : 0.8
-  "frames_to_next_keyframe" : 10
+  "frames_to_next_keyframe" : 5
 3:
   "front_right_hip": 0.5
   "front_left_hip" : 0.5
@@ -37,4 +37,4 @@
   "front_left_leg" : 0.8
   "back_left_leg"  : 1.0
   "back_right_leg" : 0.8
-  "frames_to_next_keyframe" : 5
+  "frames_to_next_keyframe" : 1

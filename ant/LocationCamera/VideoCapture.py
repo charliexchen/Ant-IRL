@@ -1,11 +1,12 @@
 import cv2
-import QRExtractor as reader
 import numpy as np
 import pyboof as pb
 from collections import deque
 
 cap = cv2.VideoCapture(0)
 
+
+cap.set(cv2.CAP_PROP_EXPOSURE,-10)
 pb.init_memmap()
 
 detector = pb.FactoryFiducial(np.uint8).qrcode()
@@ -24,6 +25,7 @@ tracker = []
 
 while True:
     _, frame = cap.read()
+
     gray = np.asarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
     detector.detect(pb.ndarray_to_boof(gray))
 

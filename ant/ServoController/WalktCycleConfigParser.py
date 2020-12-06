@@ -107,7 +107,7 @@ class WalkCycle:
     def start_from_position(self, current_frame):
         closest_frame_id = self.get_closest_frame_id(current_frame)
         closest_frame = self.all_frames[closest_frame_id]
-        steps = int(max(abs(closest_frame - current_frame)) / 0.1)
+        steps = int(max(abs(closest_frame - current_frame)) / 0.4)
 
         for step in self._get_steps(steps):
             yield current_frame + step * closest_frame
@@ -138,7 +138,7 @@ class UnifiedFixedWalkController:
         WalkCommand.RIGHT_TURN: "WalkConfigs/simple_walk_right_turn_config.yaml",
     }
 
-    def __init__(self, command_to_walk_cycle_config_map = None,
+    def __init__(self, command_to_walk_cycle_config_map=None,
                  initial_position=None):
         if command_to_walk_cycle_config_map is None:
             command_to_walk_cycle_config_map = self.DEFAULT_WALK_CYCLE_MAP

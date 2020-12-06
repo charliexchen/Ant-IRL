@@ -11,7 +11,7 @@ pygame.init()
 clock = pygame.time.Clock()
 
 pygame.display.set_mode()
-arduino_controller = SerialServoController('/dev/ttyUSB0')
+arduino_controller = SerialServoController('/dev/ttyUSB1')
 walk_cycle_controller = UnifiedFixedWalkController()
 
 key_to_command_map = {
@@ -46,11 +46,12 @@ try:
                 keyboard_command = WalkCommand.IDLE
         else:
             keyboard_command = max(keyboard_commands.items(), key=operator.itemgetter(1))[0]
-            default_to_idle_counter = 20
+            default_to_idle_counter = 10
+        print(keyboard_command)
         if keyboard_command is not None:
-            serial_command = walk_cycle_controller.get_next_step(WalkCommand.IDLE)
+            serial_command = walk_cycle_controller.get_next_step(keyboard_command)
             arduino_controller.send({id: com for id, com in enumerate(serial_command)})
         clock.tick(20)
 finally:
-    arduino_controller.send_centre_command()
+    arduino_controller.send_idle_command()
     arduino_controller.close_ports()

@@ -47,6 +47,9 @@ class SerialServoController:
     def send_centre_command(self):
         self.send({servo_id: 0 for servo_id in range(MAX_SERVO_COUNT)})
 
+    def send_idle_command(self):
+        self.send({0: 0, 1: 0, 2: 0, 3: 0, 4: 0.5, 5: 0.5, 6: 0.5, 7: 0.5})
+
     def get_data(self) -> dict:
         raw_data = self.ser.read_all()
         return raw_data
@@ -66,6 +69,6 @@ if __name__ == '__main__':
             data = arduino_controller.get_data()
             time.sleep(0.05)
     finally:
-        arduino_controller.send_centre_command()
+        arduino_controller.send_idle_command()
         arduino_controller.close_ports()
         print('ports closed')
