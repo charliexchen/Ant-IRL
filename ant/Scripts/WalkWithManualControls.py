@@ -48,7 +48,7 @@ try:
             keyboard_command = max(keyboard_commands.items(), key=operator.itemgetter(1))[0]
             default_to_idle_counter = 20
         if keyboard_command is not None:
-            serial_command = walk_cycle_controller.get_next_step(WalkCommand.IDLE)
+            serial_command = walk_cycle_controller.get_next_step(keyboard_command)
             arduino_controller.send({id: com for id, com in enumerate(serial_command)})
         clock.tick(20)
 finally:
