@@ -11,7 +11,7 @@ class AntLocator:
     X_SCALE = 1.4
     Y_SCALE = 1.5
 
-    def __init__(self, calibration_data_path='calib.npz', window_name = "Processed vs unprocessed"):
+    def __init__(self, calibration_data_path='calib.npz', window_name="Processed vs unprocessed"):
 
         self.marker_dict = {}
         self.perspective_matrix = np.identity(3)
@@ -112,8 +112,8 @@ class AntLocator:
         return cv2.undistort(image, self.mtx, self.dist, None, self.new_camera_matrix)
 
     def correct_and_annotate_frame(self, image):
-        """corrects for Fisheye, finds aruco icons and then corrects the perspective of the image"""
-        """After that, we annontate the image with positions of the markers, robot position and orientation"""
+        """corrects for Fisheye, finds aruco icons and then corrects the perspective of the image. After that,
+        we annotate the image with positions of the markers, robot position and orientation """
         undistorted_image = self._correct_for_fisheye(image)
         self.marker_dict, annotated_image = self._get_marker_dict_and_annotated_frame(undistorted_image)
 

@@ -25,7 +25,6 @@ key_to_command_map = {
 frame_counter = 0
 default_to_idle_counter = 0
 keyboard_commands = {}
-
 try:
     while True:
         frame_counter += 1
