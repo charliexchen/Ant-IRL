@@ -64,29 +64,28 @@ class HaikuPredictorTrainer:
         self.params = pickle.load(open(file_name, "rb"))
 
 
-class HyperParamEvolution:
-    @staticmethod
-    def generate_controller_from_config(config):
-        def gen_mlp(mlp_config, current_position):
-            layers = []
-            for layer in mlp_config["layers"]:
-                if layer["type"] == "linear":
-                    layers.append(hk.Linear(layer["size"]))
-                elif layer["type"] == "sigmoid":
-                    layers.append(jax.nn.sigmoid)
-                elif layer["type"] == "relu":
-                    layers.append(jax.nn.relu)
-            mlp = hk.Sequential(layers)
-            return mlp(current_position) * mlp_config["scale"] + mlp_config["shift"]
+def gen_mlp_from_config(mlp_config, argument):
+    layers = []
+    for layer in mlp_config["layers"]:
+        if layer["type"] == "linear":
+            layers.append(hk.Linear(layer["size"]))
+        elif layer["type"] == "sigmoid":
+            layers.append(jax.nn.sigmoid)
+        elif layer["type"] == "relu":
+            layers.append(jax.nn.relu)
+    mlp = hk.Sequential(layers)
+    return mlp(argument) * mlp_config["scale"] + mlp_config["shift"]
 
-        predictor = partial(gen_mlp, config["mlp"])
-        if config['loss'] == "squared_loss":
-            loss = squared_loss
-        else:
-            raise ValueError("Valid loss function not provided")
-        rng = jax.random.PRNGKey(config["rng_key"])
-        return HaikuPredictorTrainer(predictor, loss, config["learning_rate"], config["decay"], rng,
-                                     config["steps"], config["ant"])
+
+def generate_controller_from_config(config):
+    predictor = partial(gen_mlp, config["mlp"])
+    if config['loss'] == "squared_loss":
+        loss = squared_loss
+    else:
+        raise ValueError("Valid loss function not provided")
+    rng = jax.random.PRNGKey(config["rng_key"])
+    return HaikuPredictorTrainer(predictor, loss, config["learning_rate"], config["decay"], rng,
+                                 config["steps"], config["ant"])
 
 
 def squared_loss(predictions, labels):

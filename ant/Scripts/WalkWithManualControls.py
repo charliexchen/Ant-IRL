@@ -11,8 +11,8 @@ pygame.init()
 clock = pygame.time.Clock()
 
 pygame.display.set_mode()
-arduino_controller = SerialServoController('/dev/ttyUSB0')
-walk_cycle_controller = UnifiedFixedWalkController()
+arduino_controller = SerialServoController('/dev/ttyUSB1')
+walk_cycle_controller = UnifiedFixedWalkController(0.5)
 
 key_to_command_map = {
     K_w: WalkCommand.FORWARD,
@@ -21,7 +21,9 @@ key_to_command_map = {
     K_d: WalkCommand.RIGHT,
     K_q: WalkCommand.LEFT_TURN,
     K_e: WalkCommand.RIGHT_TURN,
+    K_SPACE: WalkCommand.DANCE,
 }
+
 frame_counter = 0
 default_to_idle_counter = 0
 keyboard_commands = {}

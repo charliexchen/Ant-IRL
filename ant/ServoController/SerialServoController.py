@@ -50,6 +50,9 @@ class SerialServoController:
     def send_idle_command(self):
         self.send({0: 0, 1: 0, 2: 0, 3: 0, 4: 0.5, 5: 0.5, 6: 0.5, 7: 0.5})
 
+    def send_pack_up_command(self):
+        self.send({0: -1.0, 1: 1.0, 2: -1.0, 3: 1.0, 4: -1.0, 5: -1.0, 6: -1.0, 7: -1.0})
+
     def get_data(self) -> dict:
         raw_data = self.ser.read_all()
         return raw_data

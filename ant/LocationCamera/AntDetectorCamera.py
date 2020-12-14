@@ -3,7 +3,7 @@ import numpy as np
 from cv2 import aruco
 
 
-class AntLocator:
+class AntDetectorCamera:
     Ant_MARKER_ID = 1
     ARENA_CORNER_MARKER_ID_MAP = {2: 0, 3: 1, 4: 2, 5: 3}
     SCREEN_WIDTH = 575
@@ -11,8 +11,7 @@ class AntLocator:
     X_SCALE = 1.4
     Y_SCALE = 1.5
 
-    def __init__(self, calibration_data_path='calib.npz', window_name="Processed vs unprocessed"):
-
+    def __init__(self, calibration_data_path="LocationCamera/calib.npz"):
         self.marker_dict = {}
         self.perspective_matrix = np.identity(3)
         self.cap = cv2.VideoCapture(0)
@@ -75,7 +74,7 @@ class AntLocator:
         corners, ids, _rejected_points = aruco.detectMarkers(img, self.aruco_dict, parameters=self.aruco_parameters)
         marker_dict = {}
         if ids is None:
-            return
+            return marker_dict, img
         for marker_corners, id in zip(corners, ids):
             marker_dict[id[0]] = marker_corners[0]
         return marker_dict, aruco.drawDetectedMarkers(img, corners, ids)
@@ -128,7 +127,7 @@ class AntLocator:
             pointer = np.asarray([self.ant_centre, self.ant_front])
             cv2.polylines(corrected_image, [pointer.astype(int).reshape((-1, 1, 2))], True, (0, 255, 0), 5)
         if self.target is not None:
-            cv2.circle(corrected_image, tuple(self.target), 20, (0, 0, 255), 3)
+            cv2.circle(corrected_image, tuple(self.target.astype(int)), 20, (0, 0, 255), 3)
         return corrected_image
 
     def release_capture(self):
@@ -137,7 +136,7 @@ class AntLocator:
 
 
 if __name__ == "__main__":
-    locator = AntLocator()
+    locator = AntDetectorCamera()
     _, frame = locator.cap.read()
     cv2.imshow('Processed vs unprocessed',
                frame)

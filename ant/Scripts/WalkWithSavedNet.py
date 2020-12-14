@@ -25,7 +25,7 @@ commands = wc._get_frames()
 steps = next(commands)
 net_t = hk.transform(net)
 net_t.init(rng, current_position)
-params = pickle.load(open("configs/Ant/params_89162_gen.p", "rb"))
+params = pickle.load(open("configs/Ant/params_10473_gen.p", "rb"))
 
 evaluate = jax.jit(net_t.apply)
 

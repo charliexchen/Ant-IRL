@@ -127,6 +127,7 @@ class WalkCommand(Enum):
     RIGHT = 4
     LEFT_TURN = 5
     RIGHT_TURN = 6
+    DANCE = 7
 
 
 class UnifiedFixedWalkController:
@@ -139,6 +140,7 @@ class UnifiedFixedWalkController:
         WalkCommand.RIGHT: "WalkConfigs/simple_walk_right_config.yaml",
         WalkCommand.LEFT_TURN: "WalkConfigs/simple_walk_left_turn_config.yaml",
         WalkCommand.RIGHT_TURN: "WalkConfigs/simple_walk_right_turn_config.yaml",
+        WalkCommand.DANCE:  "WalkConfigs/dance_config.yaml",
     }
 
     def __init__(self, speed=1.0, command_to_walk_cycle_config_map=None,
@@ -162,6 +164,7 @@ class UnifiedFixedWalkController:
             self.previous_command = command
         self.current_frame = next(self.current_walk_cycle_generator)
         return self.current_frame
+
 
 
 if __name__ == "__main__":
