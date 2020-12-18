@@ -47,6 +47,7 @@ void loop() {
     uint16_t raw_ms_command = (currentCommands[i] * granularity);
     pwm.writeMicroseconds(raw_servo_id, raw_ms_command);
   }
+  pwm.writeMicroseconds(0, 600);
   delay(10);
   pwm.writeMicroseconds(0, 1500);
 }

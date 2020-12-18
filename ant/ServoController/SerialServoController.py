@@ -54,7 +54,8 @@ class SerialServoController:
         self.send({0: -1.0, 1: 1.0, 2: -1.0, 3: 1.0, 4: -1.0, 5: -1.0, 6: -1.0, 7: -1.0})
 
     def get_data(self) -> dict:
-        raw_data = self.ser.read_all()
+        raw_data = self.ser.readline()
+        print(len(raw_data))
         return raw_data
 
     def close_ports(self):
@@ -70,6 +71,7 @@ if __name__ == '__main__':
             i += 1
             arduino_controller.send(next(walk_cycle))
             data = arduino_controller.get_data()
+            print(data)
             time.sleep(0.05)
     finally:
         arduino_controller.send_idle_command()
