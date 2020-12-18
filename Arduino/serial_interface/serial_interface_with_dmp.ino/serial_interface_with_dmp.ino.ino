@@ -165,14 +165,13 @@ void loop() {
     dp.p = ypr[1];
     dp.r = ypr[2];
     dp.gx = gravity.x;
-    dp.gx = gravity.y;
-    dp.gx = gravity.z;
+    dp.gy = gravity.y;
+    dp.gz = gravity.z;
     Serial.write((byte*)&dp, sizeof(dp));
   }
   delay(5);
 
   if (!dmpReady) {
-    Serial.print("fail!");
     return;
   }
 }
