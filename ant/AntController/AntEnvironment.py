@@ -6,6 +6,7 @@ from ServoController.WalktCycleConfigParser import WalkCycle
 import haiku as hk
 import jax
 
+
 class episode_data:
     def __init__(self, episode_num):
         self.episode_num = episode_num
@@ -18,7 +19,7 @@ class episode_data:
 
 
 class AntIRLEnvironment(WalkToTargetController):
-    INITIAL_POSITION = (0.2, 0.5)
+    INITIAL_POSITION = (0.2, 0.417)
     RESET_FRAMES = 10
 
     def __init__(self, port="/dev/ttyUSB0", speed=0.3, window_name="Ant Location"):
@@ -83,7 +84,7 @@ if __name__ == "__main__":
 
 
     def pred(current_position):
-        return evaluate(params, None, current_position)
+        return np.random.normal(evaluate(params, None, current_position), 0.2)
 
 
     env = AntIRLEnvironment()
