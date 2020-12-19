@@ -7,7 +7,7 @@ import haiku as hk
 import jax
 
 
-class episode_data:
+class EpisodeData:
     def __init__(self, episode_num):
         self.episode_num = episode_num
         self.states, self.actions, self.rewards = [], [], []
@@ -39,26 +39,32 @@ class AntIRLEnvironment(WalkToTargetController):
                 break
 
     def run_episode_with_predictor(self, predictor, max_len=200):
-        state = np.zeros(8)
+        robot_state = np.zeros(8)
         position = self.get_normalised_position()
-        data = episode_data(self.episode_counter)
+        data = EpisodeData(self.episode_counter)
         for _ in range(max_len):
-            print(state)
-            action = predictor(state)
+            action = predictor(robot_state)
             self.servo_controller.send(WalkCycle.frame_to_command(action))
+            sensor_data = self.servo_controller.get_data()
             new_position = self.get_normalised_position()
+            new_orientation = self.get_orientation_vector()
+            state = (robot_state, sensor_data, new_position, new_orientation)
             reward = new_position[0] - position[0]
-            data.add_step(state, action, reward)
             if position[0] > 0.8:
                 reward += 10
                 data.add_step(state, action, reward)
                 break
+            elif position[1] > 0.7 or position[1]< 0.1:
+                reward -= 5
+                data.add_step(state, action, reward)
+                break
             else:
                 data.add_step(state, action, reward)
-            state = action
+            robot_state = action
             position = new_position
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+        return data
 
 
 if __name__ == "__main__":
@@ -75,7 +81,7 @@ if __name__ == "__main__":
     wc = WalkCycle()
     input_dataset = wc.get_training_data(1)
     current_position, label = next(input_dataset)
-    commands = wc._get_frames()
+    commands = wc.get_frames()
     steps = next(commands)
     net_t = hk.transform(net)
     net_t.init(rng, current_position)
@@ -84,13 +90,15 @@ if __name__ == "__main__":
 
 
     def pred(current_position):
-        return np.random.normal(evaluate(params, None, current_position), 0.2)
-
-
+        return evaluate(params, None, current_position)
+    frames = wc.get_frames()
+    def pred_fixed(_current_position):
+        return next(frames)
     env = AntIRLEnvironment()
-    env.reset_environment()
-    env.run_episode_with_predictor(pred)
-    env.reset_environment()
-    env.run_episode_with_predictor(pred)
-    env.reset_environment()
-    env.end_session()
+    try:
+        for _ in range(10):
+            env.reset_environment()
+            env.run_episode_with_predictor(pred_fixed)
+    finally:
+        env.reset_environment()
+        env.end_session()

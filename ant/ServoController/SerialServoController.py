@@ -55,7 +55,6 @@ class SerialServoController:
 
     def get_data(self) -> dict:
         raw_data = self.ser.readline()
-        print(len(raw_data))
         return raw_data
 
     def close_ports(self):

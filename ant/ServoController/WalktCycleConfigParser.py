@@ -51,7 +51,7 @@ class WalkCycle:
         else:
             return np.arange(0.0, 1.0, 1.0 / wait_frames)
 
-    def _get_frames(self):
+    def get_frames(self):
 
         key_frame_count = len(self.key_frames)
 
@@ -71,13 +71,13 @@ class WalkCycle:
             current_key_frame_num = next_key_frame_num
 
     def get_commands(self):
-        frames = self._get_frames()
+        frames = self.get_frames()
         while True:
             current_frame = next(frames)
             yield self.frame_to_command(current_frame)
 
     def get_training_data(self, steps=3):
-        commands = self._get_frames()
+        commands = self.get_frames()
         input_frames = []
         for _ in range(steps):
             input_frames.append(next(commands))
@@ -90,7 +90,7 @@ class WalkCycle:
 
     def _get_all_frames(self):
         frames = []
-        frame_generator = self._get_frames()
+        frame_generator = self.get_frames()
         for _ in range(sum(self.wait_frames)):
             frames.append(next(frame_generator))
         self.all_frames = frames

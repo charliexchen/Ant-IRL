@@ -93,3 +93,6 @@ class WalkToTargetController:
         if show_image:
             cv2.imshow(self.window_name, annotated_frame)
         return self.locator.ant_centre / max(self.locator.SCREEN_HEIGHT, self.locator.SCREEN_WIDTH)
+
+    def get_orientation_vector(self):
+        return self.locator.ant_orientation_vector
