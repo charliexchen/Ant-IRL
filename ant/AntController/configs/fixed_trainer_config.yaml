@@ -1,0 +1,15 @@
+"mlp":
+  "layers":
+    - "type": "linear"
+      "size": 2048
+    - "type": "relu"
+    - "type": "linear"
+      "size": 8
+  "scale": 1
+  "shift": 0
+"loss": "squared_loss"
+"rng_key": 42
+"learning_rate" : 0.001
+"decay": 0.999999
+"input_shape": 8
+"name": "ant_walker"
