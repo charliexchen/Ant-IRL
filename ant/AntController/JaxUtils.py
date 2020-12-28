@@ -16,6 +16,8 @@ def gen_mlp_from_config(mlp_config, argument):
             layers.append(jax.nn.sigmoid)
         elif layer["type"] == "relu":
             layers.append(jax.nn.relu)
+        elif layer["type"] == "lrelu":
+            layers.append(jax.nn.leaky_relu)
         elif layer["type"] == "softmax":
             layers.append(jax.nn.softmax)
     mlp = hk.Sequential(layers)

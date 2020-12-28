@@ -1,11 +1,14 @@
-from ServoController.WalkToTargetController import WalkToTargetController
-from ServoController.WalktCycleConfigParser import WalkCommand
-import cv2, pickle
-import numpy as np
-from ServoController.WalktCycleConfigParser import WalkCycle
-from HaikuPredictor import HaikuPredictor
+import cv2
 import haiku as hk
 import jax
+import numpy as np
+import pickle
+from collections import deque
+
+from HaikuPredictor import HaikuPredictor
+from ServoController.WalkToTargetController import WalkToTargetController
+from ServoController.WalktCycleConfigParser import WalkCommand
+from ServoController.WalktCycleConfigParser import WalkCycle
 
 
 class EpisodeData:
@@ -20,14 +23,21 @@ class EpisodeData:
 
 
 class AntIRLEnvironment(WalkToTargetController):
+    """
+    Environment which runs the robot with a neural net, and then resets the position using the fixed walk cycle. This
+    class also handles the state, action and reward triples, which will allow us to run the RL algorith of our choice.
+    """
     INITIAL_POSITION = (0.2, 0.417)
     RESET_FRAMES = 10
 
     def __init__(self, port="/dev/ttyUSB0", speed=0.5, window_name="Ant Location"):
         super().__init__(port, speed, window_name)
-        self.episode_counter = 17
+        self.episode_counter = 0
 
     def reset_environment(self):
+        """
+        Walk the robot to the environments initial position.
+        """
         reset_counter = self.RESET_FRAMES
         self.set_target_normalised(self.INITIAL_POSITION)
         while reset_counter > 0:
@@ -40,6 +50,9 @@ class AntIRLEnvironment(WalkToTargetController):
                 break
 
     def run_episode_with_predictor(self, predictor, max_len=200):
+        """
+        Runs an episode, and saves data into an episode data object.
+        """
         robot_state = np.zeros(8)
         position = self.get_normalised_position()
         data = EpisodeData(self.episode_counter)
@@ -71,6 +84,21 @@ class AntIRLEnvironment(WalkToTargetController):
     def save_data(self, data, path='TrainingData/', name="Fixed_Walk"):
         file_name = path + name + "_" + str(self.episode_counter)
         pickle.dump(data, open(file_name, "wb"))
+
+
+class AntResetDetection:
+    """The accelerometer with DMP occasionally glitches and freezes the robot. We need to detect if this happens and
+    reset the robot. This way we can leave the robot training for longer. """
+
+    def __init__(self, params, controller):
+        self.controller = controller
+        self.params = params
+        self.position_list = deque(maxlen=params["max_len"])
+
+    def reset_if_stuck(self, pos):
+        self.position_list.append(pos)
+
+        self.controller.reset()
 
 
 if __name__ == "__main__":

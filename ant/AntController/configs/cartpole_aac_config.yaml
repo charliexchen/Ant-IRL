@@ -2,8 +2,8 @@
   "mlp":
     "layers":
       - "type": "linear"
-        "size": 128
-      - "type": "relu"
+        "size": 2048
+      - "type": "sigmoid"
       - "type": "linear"
         "size": 2
       - "type": "softmax"
@@ -11,24 +11,27 @@
     "shift": 0
   "loss": "squared_loss"
   "rng_key": 42
-  "learning_rate" : 0.001
-  "decay": 0.999999
+  "learning_rate": 0.0001
   "input_shape": 4
   "name": "actor_cartpole"
 "critic_config":
   "mlp":
     "layers":
       - "type": "linear"
-        "size": 128
-      - "type": "relu"
+        "size": 2048
+      - "type": "lrelu"
+      - "type": "linear"
+        "size": 256
+      - "type": "lrelu"
       - "type": "linear"
         "size": 1
     "scale": 1
     "shift": 0
   "loss": "squared_loss"
   "rng_key": 42
-  "learning_rate" : 0.001
-  "decay": 0.999999
+  "learning_rate": 0.0002
   "input_shape": 4
   "name": "critic_cartpole"
-"discount": 0.9
+"discount": 0.85
+"actor_queue_size": 128
+"critic_queue_size": 512

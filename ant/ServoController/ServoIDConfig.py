@@ -47,7 +47,7 @@ def get_servo_id(servo: Union[Servos, str, int]) -> int:
     if servo in SERVO_ENUM_TO_ID_MAP:
         return SERVO_ENUM_TO_ID_MAP[servo]
     try:
-        return SERVO_ENUM_TO_ID_MAP[servo.value]
+        return SERVO_ENUM_TO_ID_MAP[servo.values]
     except AttributeError:
         return False
 

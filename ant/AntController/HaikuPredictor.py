@@ -1,16 +1,17 @@
 #!/usr/bin/python
-import os
-import pickle
-from jax.tree_util import partial
 import functools
 import haiku as hk
 import jax
-from jax import jit
 import jax.numpy as jnp
 import numpy as np
+import optax
+import os
+import pickle
+from jax import jit
+from jax.tree_util import partial
 
-from ServoController.WalktCycleConfigParser import WalkCycle
 from AntController.JaxUtils import squared_loss, gen_mlp_from_config
+from ServoController.WalktCycleConfigParser import WalkCycle
 
 
 @jit
@@ -21,15 +22,17 @@ def _sgd(learning_rate, params, update):
 class HaikuPredictor:
     """Haiku and Jax are amazing, but since they work off pure functions, this object helps storing, exporting and
     importing the params"""
-    def __init__(self, predictor, input_shape, learning_rate, decay, rng, loss_func=None, name="Ant"):
+
+    def __init__(self, predictor, input_shape, learning_rate, rng, loss_func=None, name="Ant"):
         self.net_t = hk.without_apply_rng(hk.transform(predictor))
         self.loss_func = loss_func
         self.params = self.net_t.init(rng, np.ones(input_shape))
         self._jit_predict = jax.jit(self.net_t.apply)
         self.learning_rate = learning_rate
-        self.decay = decay
         self.generations = 0
         self.name = name
+        self.optimizer = optax.adam(learning_rate, b1=0.5, b2=0.9)
+        self.optimizer_state = self.optimizer.init(self.params)
 
     @functools.partial(jax.jit, static_argnums=0)
     def _loss(self, params, covariates, labels):
@@ -40,22 +43,23 @@ class HaikuPredictor:
     def _evaluate(self, params, covariates):
         return self.net_t.apply(params, covariates)
 
-    def evaluate(self, covariates):
-        return self._evaluate(self.params, covariates)
-
     @functools.partial(jax.jit, static_argnums=0)
-    def _train_batch(self, params, states, labels, learning_rate):
-        update = jax.grad(self._loss)(params, states, labels)
-        return jax.tree_multimap(jax.tree_util.partial(_sgd, learning_rate), params, update)
-
-    def train_batch(self, states, labels):
-        learning_rate = -self.learning_rate / len(states)
-        self.params = self._train_batch(self.params, states, labels, learning_rate)
-        self.learning_rate = self.learning_rate * self.decay
-        self.generations += 1
+    def _train_batch(self, params, states, labels, optimizer_state):
+        gradient = jax.grad(self._loss)(params, states, labels)
+        update, new_optimizer_state = self.optimizer.update(
+            gradient, optimizer_state)
+        return optax.apply_updates(params, update), new_optimizer_state
 
     def get_loss(self, states, labels):
         return self._loss(self.params, states, labels)
+
+    def evaluate(self, covariates):
+        return self._evaluate(self.params, covariates)
+
+    def train_batch(self, states, labels):
+        self.params, self.optimizer_state = self._train_batch(self.params, states, labels,
+                                                              self.optimizer_state)
+        self.generations += 1
 
     def save_params(self, file_name=None):
         if file_name is None:
@@ -82,10 +86,14 @@ class HaikuPredictor:
             raise ValueError("Valid loss function not provided")
         rng = jax.random.PRNGKey(config["rng_key"])
         return HaikuPredictor(predictor, config["input_shape"],
-                              config["learning_rate"], config["decay"], rng,
+                              config["learning_rate"], rng,
                               loss, config["name"])
 
+
 if __name__ == "__main__":
+    """
+    Quick loop to import a a config from a yaml and try to train it on a fixed walk loop to verify testing.
+    """
     import yaml
 
     path = "AntController/configs/fixed_trainer_config.yaml"
@@ -96,7 +104,6 @@ if __name__ == "__main__":
     current_pos, next_pos = next(input_dataset)
     print("start!")
     c = 0
-    loss = 1
     l = []
     try:
         while True:
@@ -104,13 +111,13 @@ if __name__ == "__main__":
             _current_pos, next_pos = next(input_dataset)
             current_pos = ant_controller.evaluate(current_pos)
             label = next_pos - current_pos
-            l.append(ant_controller.get_loss(np.asarray([current_pos]), np.asarray([next_pos])))
+            loss = ant_controller.get_loss(np.asarray([current_pos]), np.asarray([next_pos]))
+            l.append(loss)
             c += 1
             if len(l) > 1000:
                 l.pop(0)
-
             if c % 100 == 0:
-                print(sum(l) / len(l))
+                print(str.format("current loss: {0:.5f}, running average: {0:.5f}", loss, sum(l) / len(l)))
     except KeyboardInterrupt:
         ant_controller.save_params()
         print('Saving Parameters')

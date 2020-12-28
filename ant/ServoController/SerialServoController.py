@@ -13,6 +13,8 @@ class SerialServoController:
     PULSE_GRANULARITY_16BIT_8SERVOS = 1
 
     def __init__(self, port: str, baudrate: int = 9600, input_data_format='fffffffffff'):
+        self.port = port
+        self.baudrate = baudrate
         self.ser = serial.Serial(port, baudrate=baudrate)
         self.ser.timeout = 0.024
         self.current_command = {servo_id: self.centre() for servo_id in range(MAX_SERVO_COUNT)}
@@ -88,6 +90,11 @@ class SerialServoController:
 
     def close_ports(self):
         self.ser.close()
+
+    def reset_connection(self):
+        self.ser.close()
+        self.ser = serial.Serial(port, baudrate=baudrate)
+        self.ser.timeout = 0.024
 
 
 if __name__ == '__main__':
