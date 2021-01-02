@@ -117,7 +117,6 @@ class AntIRLEnvironment(WalkToTargetController):
         self.locator.text = None
         return self.clean_state((robot_state, sensor_data, position, orientation))
 
-
     def render(self):
         pass
 
@@ -184,12 +183,12 @@ if __name__ == "__main__":
     wc = WalkCycle("WalkConfigs/nn_training_walk_config.yaml", speed=0.3)
     frames = wc.get_frames()
 
-
     def pred_fixed(_current_position):
         return next(frames)
 
-
-    critic = HaikuPredictor.get_model_from_saved_file("AntController/configs/selected_critic.p")
+    critic = HaikuPredictor.get_model_from_saved_file(
+        "AntController/configs/selected_critic.p"
+    )
     env = AntIRLEnvironment()
     env.episode_counter = 394
     try:

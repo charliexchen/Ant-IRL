@@ -46,8 +46,8 @@ class EpisodeWithValue(EpisodeData):
         """
 
         return (
-                np.asarray(self.rewards)
-                + np.pad(self.values, ((0, 1), (0, 0)), mode="constant")[1:] * self.discount
+            np.asarray(self.rewards)
+            + np.pad(self.values, ((0, 1), (0, 0)), mode="constant")[1:] * self.discount
         )
 
     def get_advantage(self):
@@ -110,7 +110,7 @@ class HaikuActorCritic:
         self.random_action_prob = params["random_action_prob"]
         if "random_action_prob_half_life" in params:
             self.random_action_prob_decay = 0.5 ** (
-                    1 / params["random_action_prob_half_life"]
+                1 / params["random_action_prob_half_life"]
             )
         else:
             self.random_action_prob_decay
@@ -134,7 +134,7 @@ class HaikuActorCritic:
         return optax.apply_updates(actor_params, update), new_optimizer_state
 
     def _advantage_scaled_log_likelihoods(
-            self, actor_params, states, per_action_advantage
+        self, actor_params, states, per_action_advantage
     ):
         log_likelihoods = jnp.log(self.actor.net_t.apply(actor_params, states))
         # negative, since we want to gradient ascend the log likelihood * advantage, and the optimizer is descending
@@ -156,7 +156,7 @@ class HaikuActorCritic:
             return self.get_random_action(env)
         action_distribution = np.array(self.actor.evaluate(state))
         action_distribution[0] = (
-                action_distribution[0] - sum(action_distribution) + 1
+            action_distribution[0] - sum(action_distribution) + 1
         )  # This is a bug in numpy :(
         return np.random.choice(env.action_space.n, p=action_distribution)
 
@@ -228,7 +228,7 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         self.noise_std = params["noise_std"]
 
     def _advantage_scaled_log_likelihoods_normal(
-            self, actor_params, states, actions, advantages
+        self, actor_params, states, actions, advantages
     ):
         """
         Calculate the log likelihoods using the PDF of normal dist, then scale with advantage to get the 'loss'.
@@ -241,7 +241,7 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
 
     @functools.partial(jax.jit, static_argnums=0)
     def _train_continuous_actor(
-            self, actor_params, states, actions, advantages, optimizer_state
+        self, actor_params, states, actions, advantages, optimizer_state
     ):
         gradient = jax.grad(self._advantage_scaled_log_likelihoods_normal)(
             actor_params, states, actions, advantages
@@ -258,11 +258,7 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         advantages = np.asarray(self.actor_training_queue["advantages"])
         actions = np.asarray(self.actor_training_queue["actions"])
         self.actor.params, self.actor.optimizer_state = self._train_continuous_actor(
-            self.actor.params,
-            states,
-            actions,
-            advantages,
-            self.actor.optimizer_state,
+            self.actor.params, states, actions, advantages, self.actor.optimizer_state
         )
 
     def add_episode_data_to_queue(self, episode_data):
@@ -301,7 +297,9 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
                 )
                 env.reset()
                 time.sleep(1)
-            episode_data.add_step(state, action, [reward], self.value_critic.evaluate(state))
+            episode_data.add_step(
+                state, action, [reward], self.value_critic.evaluate(state)
+            )
             state = state_next
             if terminal:
                 break

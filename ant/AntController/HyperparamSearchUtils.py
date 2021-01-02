@@ -53,7 +53,9 @@ def create_predictor_from_hyper_param_search(config, data, labels):
     best_predictor.train_on_data(
         config["batch_size"], config["epochs"], data[test_pivot:], labels[test_pivot:]
     )
-    best_test_error = best_predictor.get_loss(data[:test_pivot], labels[:test_pivot]) / test_pivot
+    best_test_error = (
+        best_predictor.get_loss(data[:test_pivot], labels[:test_pivot]) / test_pivot
+    )
     progress_range = trange(config["model_count"])
     for i in progress_range:
         new_predictor, new_config = generate_predictor_from_random_config(config)
@@ -63,7 +65,9 @@ def create_predictor_from_hyper_param_search(config, data, labels):
             data[test_pivot:],
             labels[test_pivot:],
         )
-        new_test_error = new_predictor.get_loss(data[:test_pivot], labels[:test_pivot]) / test_pivot
+        new_test_error = (
+            new_predictor.get_loss(data[:test_pivot], labels[:test_pivot]) / test_pivot
+        )
         if best_test_error > new_test_error:
             best_predictor, best_config = new_predictor, new_config
             best_test_error = new_test_error
@@ -124,15 +128,16 @@ def get_action_scaling(data):
 
 
 def pretrain_predictor_as_value_func(
-        predictor, discount, data, epochs, batch_size, test_pivot
+    predictor, discount, data, epochs, batch_size, test_pivot
 ):
     rewards, states, action, shifted_states, is_non_terminal = data
     for _ in range(epochs):
-        batch_index = np.random.choice(
-            range(len(states) - test_pivot), batch_size
-        ) + test_pivot
+        batch_index = (
+            np.random.choice(range(len(states) - test_pivot), batch_size) + test_pivot
+        )
         next_step_value = np.multiply(
-            is_non_terminal[batch_index], predictor.evaluate(shifted_states[batch_index]).flatten(),
+            is_non_terminal[batch_index],
+            predictor.evaluate(shifted_states[batch_index]).flatten(),
         )
         td_label = rewards[batch_index] + discount * next_step_value
         predictor.train_batch(states[batch_index], td_label.reshape((batch_size, 1)))
@@ -144,7 +149,10 @@ def get_value_func_loss(predictor, discount, data, test_pivot):
     td_labels = rewards[:test_pivot] + discount * np.multiply(
         is_non_terminal[:test_pivot], next_step_value
     )
-    return predictor.get_loss(states[:test_pivot], td_labels.reshape((test_pivot, 1))) / test_pivot
+    return (
+        predictor.get_loss(states[:test_pivot], td_labels.reshape((test_pivot, 1)))
+        / test_pivot
+    )
 
 
 def create_value_func_from_hyper_param_search(config, data):
@@ -152,8 +160,12 @@ def create_value_func_from_hyper_param_search(config, data):
     test_split_proportion = config["test_split_proportion"]
     test_pivot = int(test_split_proportion * len(data[0]))
     states_shift, states_scale = get_state_scaling(data)
-    config["scale_config"] = {"input_scale": states_scale, "input_shift": states_shift, "output_shift": 0,
-                              "output_scale": 1}
+    config["scale_config"] = {
+        "input_scale": states_scale,
+        "input_shift": states_shift,
+        "output_shift": 0,
+        "output_scale": 1,
+    }
     best_predictor, best_config = generate_predictor_from_random_config(config)
     pretrain_predictor_as_value_func(
         best_predictor,
@@ -164,7 +176,9 @@ def create_value_func_from_hyper_param_search(config, data):
         test_pivot,
     )
 
-    best_test_error = get_value_func_loss(best_predictor, config["discount"], data, test_pivot)
+    best_test_error = get_value_func_loss(
+        best_predictor, config["discount"], data, test_pivot
+    )
 
     progress_range = trange(config["model_count"])
 
@@ -178,7 +192,9 @@ def create_value_func_from_hyper_param_search(config, data):
             config["batch_size"],
             test_pivot,
         )
-        new_test_error = get_value_func_loss(new_predictor, config["discount"], data, test_pivot)
+        new_test_error = get_value_func_loss(
+            new_predictor, config["discount"], data, test_pivot
+        )
         if best_test_error > new_test_error:
             best_predictor, best_config = new_predictor, new_config
             best_test_error = new_test_error
@@ -197,11 +213,12 @@ def create_actor_func_from_hyper_param_search(config, data):
     _rewards, states, action, _shifted_states, _is_non_terminal = data
     states_shift, states_scale = get_state_scaling(data)
     action_shift, action_scale = get_action_scaling(data)
-    config["scale_config"] = {"input_scale": states_scale,
-                              "input_shift": states_shift,
-                              "output_scale": action_scale,
-                              "output_shift": action_shift
-                              }
+    config["scale_config"] = {
+        "input_scale": states_scale,
+        "input_shift": states_shift,
+        "output_scale": action_scale,
+        "output_shift": action_shift,
+    }
     return create_predictor_from_hyper_param_search(config, states, action)
 
 

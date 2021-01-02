@@ -21,7 +21,7 @@ class HaikuPredictor:
     """
 
     def __init__(
-            self, predictor, input_shape, learning_rate, rng, loss_func=None, name="Ant"
+        self, predictor, input_shape, learning_rate, rng, loss_func=None, name="Ant"
     ):
         self.net_t = hk.without_apply_rng(hk.transform(predictor))
         self.loss_func = loss_func
@@ -103,7 +103,9 @@ class HaikuPredictor:
     def generate_controller_from_config(config):
         if "path" in config:
             predictor = HaikuPredictor.get_model_from_saved_file(config["path"])
-            predictor.optimizer = optax.adam(config["new_learning_rate"], b1=0.5, b2=0.9)
+            predictor.optimizer = optax.adam(
+                config["new_learning_rate"], b1=0.5, b2=0.9
+            )
             return predictor
         predictor = partial(gen_mlp_from_config, config["mlp"])
         if config["loss"] == "squared_loss":
