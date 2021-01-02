@@ -125,9 +125,8 @@ class AntIRLEnvironment(WalkToTargetController):
         Runs an episode, and saves data into an episode data object.
         """
         data = EpisodeData(self.episode_counter)
-        robot_state, sensor_data, position, orientation = self.reset()
+        state = self.reset()
         self.locator.text = self.RUNNING_TEXT.format(self.episode_counter)
-        state = (robot_state, sensor_data, position, orientation)
         for _ in range(max_len):
             if not self.servo_controller.ready:
                 return
