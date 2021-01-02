@@ -28,12 +28,14 @@ class EpisodeData:
 
 
 class AntIRLEnvironment(WalkToTargetController):
+
     """
     Environment which runs the robot with a neural net, and then resets the position using the fixed walk cycle. This
     class also handles the state, action and reward triples, which will allow us to run the RL algorithm of our choice.
     """
 
     INITIAL_POSITION = (0.1, 0.417)
+
     RESET_FRAMES = 10
     RESET_TEXT = "Resetting Environment..."
     RUNNING_TEXT = "Running Episode {}"
@@ -60,6 +62,7 @@ class AntIRLEnvironment(WalkToTargetController):
                 reset_counter = self.RESET_FRAMES
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
+
 
     def reward_from_position(self, position):
         forward_reward = position[0] - self.previous_position[0]
@@ -146,6 +149,7 @@ class AntIRLEnvironment(WalkToTargetController):
                 break
             if "cv2_term" in info:
                 break
+        return data
 
         self.episode_counter += 1
         self.locator.text = None
