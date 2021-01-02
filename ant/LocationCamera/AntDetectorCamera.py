@@ -37,7 +37,7 @@ class AntDetectorCamera:
 
     def _detect_location_and_orentation(self):
         marker_corners = np.array([self.marker_dict[self.Ant_MARKER_ID]])
-        corrected_marker_corners = cv2.perspectiveTransform(marker_corners, self.perspective_matrix)[0]
+        #corrected_marker_corners = cv2.perspectiveTransform(marker_corners, self.perspective_matrix)[0]
         self.ant_centre = self._get_centre(corrected_marker_corners)
         self.ant_front = (corrected_marker_corners[0] + corrected_marker_corners[
             3]) / 2  # centre of the front left and front right corner of marker

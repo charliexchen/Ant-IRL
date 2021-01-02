@@ -13,7 +13,7 @@ size = calcsize('fffffffffff')
 buffer = []
 
 
-def get_latest_from_buffer(buffer, separator, latest=[], format='=fffffffffff'):
+def get_latest_from_buffer(buffer, latest=[], separator=[0, 252, 127, 63], format='=fffffffffff'):
     size = calcsize(format)
     new_buffer = []
     i = 0
@@ -37,21 +37,11 @@ def get_latest_from_buffer(buffer, separator, latest=[], format='=fffffffffff'):
     return new_buffer, latest
 
 
-separator = [0, 252, 127, 63]
 buff = []
 latest = []
 while True:
     buff.extend(ser.read_all())
-    buff, latest = get_latest_from_buffer(buff, separator, latest)
-    if len(latest)>=44:
-        print(unpack("fffffffffff", bytes(latest))[5:8])
-    # print(list(data_), len(data_))
-    # while ser.in_waiting > size:
-    #    data_ = ser.read(size)
-    # ser.flushInput()
-    # if data_:
-    #     print(list(data_[:4]))
-
-    # if data_:
-    #    print(unpack('ffffffff', data_)[4:])
-    time.sleep(0.03)
+    buff, latest = get_latest_from_buffer(buff, latest)
+    if len(latest) >= 44:
+        print(unpack("fffffffffff", bytes(latest))[5])
+    time.sleep(0.5)
