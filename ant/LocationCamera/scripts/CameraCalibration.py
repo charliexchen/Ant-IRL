@@ -1,7 +1,7 @@
-'''
+"""
  Based on the following tutorial:
    http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_calib3d/py_calibration/py_calibration.html
-'''
+"""
 
 import numpy as np
 import cv2
@@ -30,16 +30,16 @@ while True:
     gray = np.asarray(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
     cv2.imshow("frame", gray)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         print("Quitting Video Capture...")
         break
-    if cv2.waitKey(10) & 0xFF == ord('p'):
+    if cv2.waitKey(10) & 0xFF == ord("p"):
         print("snap!")
         frames.append(frame)
 cap.release()
-old_frames = pickle.load(open('calibration_frames.p', "rb"))
+old_frames = pickle.load(open("calibration_frames.p", "rb"))
 frames = old_frames + frames
-pickle.dump(frames, open('calibration_frames.p', "wb"))
+pickle.dump(frames, open("calibration_frames.p", "wb"))
 
 for img in frames:
     # Load the image and convert it to gray scale
@@ -62,23 +62,25 @@ for img in frames:
         cv2.drawChessboardCorners(img, (rows, cols), corners, ret)
 
     # Display the image
-    cv2.imshow('chess board', img)
+    cv2.imshow("chess board", img)
     cv2.waitKey(500)
 
 # Calibrate the camera and save the results
-ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objectPointsArray, imgPointsArray, gray.shape[::-1], None, None)
-np.savez('../calib.npz', mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)
+ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
+    objectPointsArray, imgPointsArray, gray.shape[::-1], None, None
+)
+np.savez("../calib.npz", mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)
 
 # Print the camera calibration error
 error = 0
 
 for i in range(len(objectPointsArray)):
-    imgPoints, _ = cv2.projectPoints(objectPointsArray[i], rvecs[i], tvecs[i], mtx, dist)
+    imgPoints, _ = cv2.projectPoints(
+        objectPointsArray[i], rvecs[i], tvecs[i], mtx, dist
+    )
     error += cv2.norm(imgPointsArray[i], imgPoints, cv2.NORM_L2) / len(imgPoints)
 
 print("Total error: ", error / len(objectPointsArray))
-
-
 
 
 cap = cv2.VideoCapture(0)
@@ -90,9 +92,9 @@ while True:
     newCameraMtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
     undistortedImg = cv2.undistort(frame, mtx, dist, None, newCameraMtx)
 
-    cv2.imshow('chess board', np.hstack((frame, undistortedImg)))
+    cv2.imshow("chess board", np.hstack((frame, undistortedImg)))
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         print("Quitting Video Capture...")
         break
 cap.release()

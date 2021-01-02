@@ -124,6 +124,9 @@ void setup() {
 
   // configure LED for output
   pinMode(LED_PIN, OUTPUT);
+  delay(500);
+  Serial.println("Ready!");
+   delay(500);
 }
 
 

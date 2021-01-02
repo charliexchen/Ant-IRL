@@ -19,10 +19,10 @@
     "layers":
       - "type": "linear"
         "size": 2048
-      - "type": "lrelu"
+      - "type": "sigmoid"
       - "type": "linear"
         "size": 256
-      - "type": "lrelu"
+      - "type": "sigmoid"
       - "type": "linear"
         "size": 1
     "scale": 1
@@ -32,6 +32,9 @@
   "learning_rate": 0.0002
   "input_shape": 4
   "name": "critic_cartpole"
-"discount": 0.85
+"discount": 0.9
 "actor_queue_size": 128
 "critic_queue_size": 512
+"random_action_prob": 0.4
+"random_action_prob_half_life": 500
+"action_space_size" : 2

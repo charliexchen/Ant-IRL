@@ -5,16 +5,21 @@ import numpy as np
 import pickle
 from collections import deque
 
-from HaikuPredictor import HaikuPredictor
+from AntController.HaikuPredictor import HaikuPredictor
 from ServoController.WalkToTargetController import WalkToTargetController
 from ServoController.WalktCycleConfigParser import WalkCommand
 from ServoController.WalktCycleConfigParser import WalkCycle
 
 
 class EpisodeData:
+    """
+    Simple object to store SAR triples
+    """
+
     def __init__(self, episode_num):
         self.episode_num = episode_num
         self.states, self.actions, self.rewards = [], [], []
+        self.terminal_reward = None
 
     def add_step(self, state, action, reward):
         self.states.append(state)
@@ -25,16 +30,21 @@ class EpisodeData:
 class AntIRLEnvironment(WalkToTargetController):
     """
     Environment which runs the robot with a neural net, and then resets the position using the fixed walk cycle. This
-    class also handles the state, action and reward triples, which will allow us to run the RL algorith of our choice.
+    class also handles the state, action and reward triples, which will allow us to run the RL algorithm of our choice.
     """
-    INITIAL_POSITION = (0.2, 0.417)
+
+    INITIAL_POSITION = (0.1, 0.417)
     RESET_FRAMES = 10
+    RESET_TEXT = "Resetting Environment..."
+    RUNNING_TEXT = "Running Episode {}"
 
     def __init__(self, port="/dev/ttyUSB0", speed=0.5, window_name="Ant Location"):
         super().__init__(port, speed, window_name)
         self.episode_counter = 0
+        self.prev_position = None
+        self.previous_episode_success = None
 
-    def reset_environment(self):
+    def walk_to_reset_position(self):
         """
         Walk the robot to the environments initial position.
         """
@@ -42,91 +52,136 @@ class AntIRLEnvironment(WalkToTargetController):
         self.set_target_normalised(self.INITIAL_POSITION)
         while reset_counter > 0:
             self.go_to_target()
+            _sensor_data = self.servo_controller.get_data_if_ready()
             if self.command == WalkCommand.IDLE:
                 reset_counter -= 1
             else:
                 self.set_target_normalised(self.INITIAL_POSITION)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+                reset_counter = self.RESET_FRAMES
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
-    def run_episode_with_predictor(self, predictor, max_len=200):
+    def reward_from_position(self, position):
+        forward_reward = position[0] - self.previous_position[0]
+        side_penalty = (-abs(position[1] - self.INITIAL_POSITION[1])) - (
+            -abs(self.previous_position[1] - self.INITIAL_POSITION[1])
+        )
+        return forward_reward + side_penalty
+
+    def step(self, action):
+        self.servo_controller.send(WalkCycle.frame_to_command(action))
+        sensor_data = self.servo_controller.get_data_if_ready()
+        terminal = False
+        info = {}
+        if sensor_data is None:
+            # If sensor data is None, then it means that either the robot is frozen or hasn't finished initalizing
+            info["frozen"] = True
+            return None, None, True, info
+        position = self.get_normalised_position()
+        new_orientation = self.get_orientation_vector()
+        state = (action, sensor_data, position, new_orientation)
+        reward = self.reward_from_position(position)
+        if position[0] > 0.8:
+            reward += 2
+            terminal = True
+            info["final_reward"] = 2
+            info["final_state"] = "success"
+            self.previous_episode_success = True
+        elif abs(position[1] - self.INITIAL_POSITION[1]) > 0.25:
+            reward += -1
+            terminal = True
+            info["final_reward"] = -1
+            info["final_state"] = "fail"
+            self.previous_episode_success = False
+        self.previous_position = position
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            info["cv2_term"]
+        return self.clean_state(state), reward, terminal, info
+
+    def reset(self):
+        if self.previous_episode_success is True:
+            self.locator.text = "Episode Successful, " + self.RESET_TEXT
+        elif self.previous_episode_success is False:
+            self.locator.text = "Episode Failed, " + self.RESET_TEXT
+        else:
+            self.locator.text = self.RESET_TEXT
+        self.walk_to_reset_position()
+        self.randomise_initial_orientation()
+        sensor_data = None
+        while sensor_data is None:
+            robot_state = self.serial_command
+            sensor_data = self.servo_controller.get_data_if_ready()
+            position = self.get_normalised_position()
+            orientation = self.get_orientation_vector()
+            self.previous_position = position
+        self.locator.text = None
+        return self.clean_state((robot_state, sensor_data, position, orientation))
+
+
+    def render(self):
+        pass
+
+    def run_episode_with_predictor(self, predictor, value_critic=None, max_len=200):
         """
         Runs an episode, and saves data into an episode data object.
         """
-        robot_state = np.zeros(8)
-        position = self.get_normalised_position()
         data = EpisodeData(self.episode_counter)
+        robot_state, sensor_data, position, orientation = self.reset()
+        self.locator.text = self.RUNNING_TEXT.format(self.episode_counter)
+        state = (robot_state, sensor_data, position, orientation)
         for _ in range(max_len):
-            action = predictor(robot_state)
-            self.servo_controller.send(WalkCycle.frame_to_command(action))
-            sensor_data = self.servo_controller.get_data()
-            new_position = self.get_normalised_position()
-            new_orientation = self.get_orientation_vector()
-            state = (robot_state, sensor_data, new_position, new_orientation)
-            reward = new_position[0] - position[0]
-            if position[0] > 0.8:
-                reward += 10
-                data.add_step(state, action, reward)
+            if not self.servo_controller.ready:
+                return
+            action = predictor(state)
+            state_next, reward, terminal, info = self.step(action)
+            data.add_step(state, action, reward)
+            if value_critic is not None:
+                print(value_critic.evaluate(self.clean_state(state)))
+            state = state_next
+            if "frozen" in info:
+                # If sensor data is None, then it means that either the robot is frozen or hasn't finished initalizing
+                print("Robot was Frozen! Abandoning episode.")
+                return
+            if "final_reward" in info:
+                EpisodeData.terminal_reward = info["final_reward"]
+            if terminal:
                 break
-            elif position[1] > 0.7 or position[1] < 0.1:
-                reward -= 5
-                data.add_step(state, action, reward)
+            if "cv2_term" in info:
                 break
-            else:
-                data.add_step(state, action, reward)
-            robot_state = action
-            position = new_position
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        self.save_data(data)
-        self.episode_counter += 1
 
-    def save_data(self, data, path='TrainingData/', name="Fixed_Walk"):
+        self.episode_counter += 1
+        self.locator.text = None
+        return data
+
+    def save_data(self, data, path="TrainingData/", name="Fixed_Walk"):
         file_name = path + name + "_" + str(self.episode_counter)
         pickle.dump(data, open(file_name, "wb"))
 
+    def randomise_initial_orientation(self):
+        dir = np.random.randint(2)
+        if dir == 0:
+            command = WalkCommand.LEFT_TURN
+            steps = np.random.randint(15)
+        else:
+            command = WalkCommand.RIGHT_TURN
+            steps = np.random.randint(10)
+        for _ in range(steps):
+            self.serial_command = self.unified_walk_controller.get_next_step(command)
+            self.servo_controller.send(
+                {id: com for id, com in enumerate(self.serial_command)}
+            )
+            _position = self.get_normalised_position()
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
 
-class AntResetDetection:
-    """The accelerometer with DMP occasionally glitches and freezes the robot. We need to detect if this happens and
-    reset the robot. This way we can leave the robot training for longer. """
-
-    def __init__(self, params, controller):
-        self.controller = controller
-        self.params = params
-        self.position_list = deque(maxlen=params["max_len"])
-
-    def reset_if_stuck(self, pos):
-        self.position_list.append(pos)
-
-        self.controller.reset()
+    @staticmethod
+    def clean_state(state):
+        state = np.concatenate(state)
+        return np.delete(np.asarray(state), 18)
 
 
 if __name__ == "__main__":
-    def net(current_position):
-        mlp = hk.Sequential([
-            hk.Linear(1024), jax.nn.sigmoid,
-            hk.Linear(8)
-        ])
-        return mlp(current_position)
-
-
-    rng = jax.random.PRNGKey(42)
-
-    wc = WalkCycle()
-    input_dataset = wc.get_training_data(1)
-    current_position, label = next(input_dataset)
-    commands = wc.get_frames()
-    steps = next(commands)
-    net_t = hk.transform(net)
-    net_t.init(rng, current_position)
-    params = pickle.load(open("configs/Ant/params_10473_gen.p", "rb"))
-    evaluate = jax.jit(net_t.apply)
-
-
-    def pred(current_position):
-        return evaluate(params, None, current_position)
-
-
+    wc = WalkCycle("WalkConfigs/nn_training_walk_config.yaml", speed=0.3)
     frames = wc.get_frames()
 
 
@@ -134,11 +189,15 @@ if __name__ == "__main__":
         return next(frames)
 
 
+    critic = HaikuPredictor.get_model_from_saved_file("AntController/configs/selected_critic.p")
     env = AntIRLEnvironment()
+    env.episode_counter = 394
     try:
-        for _ in range(100):
-            env.reset_environment()
-            env.run_episode_with_predictor(pred_fixed)
+        for i in range(10000):
+            data = env.run_episode_with_predictor(pred_fixed)
+            if data is not None:
+                env.save_data(data, path="TrainingData/", name="Fixed_Walk_With_Sensor")
+                print(f"Episode {env.episode_counter} saved")
     finally:
-        env.reset_environment()
+        env.walk_to_reset_position()
         env.end_session()

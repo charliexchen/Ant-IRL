@@ -10,11 +10,9 @@ from ServoController.SerialServoController import SerialServoController
 
 
 def net(current_position):
-    mlp = hk.Sequential([
-        hk.Linear(1024), jax.nn.sigmoid,
-        hk.Linear(8)
-    ])
+    mlp = hk.Sequential([hk.Linear(1024), jax.nn.sigmoid, hk.Linear(8)])
     return mlp(current_position)
+
 
 rng = jax.random.PRNGKey(42)
 
@@ -29,7 +27,7 @@ params = pickle.load(open("configs/Ant/params_10473_gen.p", "rb"))
 
 evaluate = jax.jit(net_t.apply)
 
-arduino_controller = SerialServoController('/dev/ttyUSB0')
+arduino_controller = SerialServoController("/dev/ttyUSB0")
 try:
     while True:
         current_position = evaluate(params, None, current_position)
@@ -39,4 +37,4 @@ try:
 finally:
     arduino_controller.send_idle_command()
     arduino_controller.close_ports()
-    print('ports closed')
+    print("ports closed")

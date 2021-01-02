@@ -5,13 +5,16 @@ import pygame
 from pygame.locals import *
 
 from ServoController.SerialServoController import SerialServoController
-from ServoController.WalktCycleConfigParser import UnifiedFixedWalkController, WalkCommand
+from ServoController.WalktCycleConfigParser import (
+    UnifiedFixedWalkController,
+    WalkCommand,
+)
 
 pygame.init()
 clock = pygame.time.Clock()
 
 pygame.display.set_mode()
-arduino_controller = SerialServoController('/dev/ttyUSB0')
+arduino_controller = SerialServoController("/dev/ttyUSB0")
 walk_cycle_controller = UnifiedFixedWalkController(0.5)
 
 key_to_command_map = {
@@ -46,7 +49,9 @@ try:
             if default_to_idle_counter < 0:
                 keyboard_command = WalkCommand.IDLE
         else:
-            keyboard_command = max(keyboard_commands.items(), key=operator.itemgetter(1))[0]
+            keyboard_command = max(
+                keyboard_commands.items(), key=operator.itemgetter(1)
+            )[0]
             default_to_idle_counter = 10
         print(keyboard_command)
         if keyboard_command is not None:

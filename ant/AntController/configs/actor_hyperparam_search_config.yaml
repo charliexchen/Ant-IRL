@@ -1,0 +1,27 @@
+"mlp_search_config":
+  "permitted_activations":
+    - "relu"
+    - "sigmoid"
+    - "lrelu"
+  "hidden_layer_size_exp_range":
+    - 5
+    - 11
+  "hidden_layer_count_range":
+    - 1
+    - 3
+  "output_size": 8
+  "scale": 1
+  "shift": 0
+"loss": "squared_loss"
+"rng_key": 42
+"learning_rate_exp_range":
+  - -7
+  - -4
+"decay": 0.999999
+"input_shape": 22
+"name": "test_hyperparam"
+"batch_size": 256
+"epochs": 1024
+"model_count": 256
+"test_split_proportion": 0.1
+"discount": 0.98

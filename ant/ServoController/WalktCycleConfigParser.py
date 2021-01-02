@@ -10,8 +10,12 @@ from ServoController.ServoIDConfig import get_servo_id
 
 
 class WalkCycle:
-    """Imports a yaml file which contains the keyframes of a walkcycle"""
-    def __init__(self, path="WalkConfigs/simple_walk_forward_config.yaml", speed=1.0):
+    """
+    Imports a yaml file which contains the keyframes of a walkcycle, and the handles the interpolation of the frames so
+    we can have manually engineer walk cycles.
+    """
+
+    def __init__(self, path, speed=1.0):
         self.path = path
         self.key_frames = []
         self.wait_frames = []
@@ -42,6 +46,12 @@ class WalkCycle:
 
     @staticmethod
     def frame_to_command(frame):
+        """
+        The frames are numpy arrays since that makes the interpolation easier. Converts the frame into a command which
+        SerialServoController can send.
+        :param frame:
+        :return: dict of servo id to commands
+        """
         return {servo_id: servo_pos for servo_id, servo_pos in enumerate(frame)}
 
     @staticmethod
@@ -131,7 +141,12 @@ class WalkCommand(Enum):
 
 
 class UnifiedFixedWalkController:
-    """Stores a set of fixed walk cycles, and then returns/interpolates between them based on incoming commands"""
+    """
+    Stores a set of fixed walk cycles, and then returns/interpolates between them based on incoming commands. This
+    allows for easy switching between walk cycles, so we can send one command to make the robot move left, and the send
+    another to make it transition to moving back, for example.
+    """
+
     DEFAULT_WALK_CYCLE_MAP = {
         WalkCommand.IDLE: "WalkConfigs/simple_walk_idle_config.yaml",
         WalkCommand.FORWARD: "WalkConfigs/simple_walk_forward_config.yaml",
@@ -140,16 +155,18 @@ class UnifiedFixedWalkController:
         WalkCommand.RIGHT: "WalkConfigs/simple_walk_right_config.yaml",
         WalkCommand.LEFT_TURN: "WalkConfigs/simple_walk_left_turn_config.yaml",
         WalkCommand.RIGHT_TURN: "WalkConfigs/simple_walk_right_turn_config.yaml",
-        WalkCommand.DANCE:  "WalkConfigs/dance_config.yaml",
+        WalkCommand.DANCE: "WalkConfigs/dance_config.yaml",
     }
 
-    def __init__(self, speed=1.0, command_to_walk_cycle_config_map=None,
-                 initial_position=None):
+    def __init__(
+        self, speed=1.0, command_to_walk_cycle_config_map=None, initial_position=None
+    ):
         if command_to_walk_cycle_config_map is None:
             command_to_walk_cycle_config_map = self.DEFAULT_WALK_CYCLE_MAP
-        self.command_to_walk_cycle = {command: WalkCycle(walk_cycle_config, speed=speed) for command, walk_cycle_config
-                                      in
-                                      command_to_walk_cycle_config_map.items()}
+        self.command_to_walk_cycle = {
+            command: WalkCycle(walk_cycle_config, speed=speed)
+            for command, walk_cycle_config in command_to_walk_cycle_config_map.items()
+        }
         self.previous_command = None
         self.current_walk_cycle_generator = None
         if initial_position is None:
@@ -158,17 +175,16 @@ class UnifiedFixedWalkController:
             self.current_frame = initial_position
 
     def get_next_step(self, command: WalkCommand):
+        """
+        Moves along one of the walk commands if the command doesn't change. If it changes, transition over to the new
+        walk cycle by interpolating with the closest position.
+        :param command: a walk command which is a key in the walk command map
+        :return: a frame of servo positions
+        """
         if command != self.previous_command:
-            self.current_walk_cycle_generator = self.command_to_walk_cycle[command].start_from_position(
-                self.current_frame)
+            self.current_walk_cycle_generator = self.command_to_walk_cycle[
+                command
+            ].start_from_position(self.current_frame)
             self.previous_command = command
         self.current_frame = next(self.current_walk_cycle_generator)
         return self.current_frame
-
-
-
-if __name__ == "__main__":
-    wc = WalkCycle("../WalkConfigs/simple_walk_forward_config.yaml")
-    walk = wc.get_commands()
-    for _ in range(20):
-        print(next(walk))

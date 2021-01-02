@@ -1,6 +1,10 @@
 from enum import Enum
 from typing import Union
 
+"""
+Bunch of constants and utils relating to servo commands
+"""
+
 MAX_PULSE = 2400
 MIN_PULSE = 600
 MAX_SERVO_COUNT = 8
@@ -21,24 +25,26 @@ INVERTED_SERVOS = {
     Servos.FRONT_RIGHT_HIP,
     Servos.BACK_RIGHT_HIP,
     Servos.FRONT_RIGHT_LEG,
-    Servos.BACK_LEFT_LEG
+    Servos.BACK_LEFT_LEG,
 }
 
 SPEED_DEPENDENT_SERVOS = {
     Servos.FRONT_RIGHT_HIP,
     Servos.BACK_RIGHT_HIP,
     Servos.BACK_LEFT_HIP,
-    Servos.FRONT_LEFT_HIP
+    Servos.FRONT_LEFT_HIP,
 }
 
-SERVO_ENUM_TO_ID_MAP = {"front_right_hip": 0,
-                        "front_left_hip": 1,
-                        "back_left_hip": 2,
-                        "back_right_hip": 3,
-                        "front_right_leg": 4,
-                        "front_left_leg": 5,
-                        "back_left_leg": 6,
-                        "back_right_leg": 7, }
+SERVO_ENUM_TO_ID_MAP = {
+    "front_right_hip": 0,
+    "front_left_hip": 1,
+    "back_left_hip": 2,
+    "back_right_hip": 3,
+    "front_right_leg": 4,
+    "front_left_leg": 5,
+    "back_left_leg": 6,
+    "back_right_leg": 7,
+}
 
 
 def get_servo_id(servo: Union[Servos, str, int]) -> int:
@@ -47,9 +53,9 @@ def get_servo_id(servo: Union[Servos, str, int]) -> int:
     if servo in SERVO_ENUM_TO_ID_MAP:
         return SERVO_ENUM_TO_ID_MAP[servo]
     try:
-        return SERVO_ENUM_TO_ID_MAP[servo.values]
+        return SERVO_ENUM_TO_ID_MAP[servo.value]
     except AttributeError:
-        return False
+        return None
 
 
 INVERTED_SERVO_IDS = {get_servo_id(servo) for servo in INVERTED_SERVOS}
