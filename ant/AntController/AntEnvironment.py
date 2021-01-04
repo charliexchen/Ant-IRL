@@ -28,7 +28,6 @@ class EpisodeData:
 
 
 class AntIRLEnvironment(WalkToTargetController):
-
     """
     Environment which runs the robot with a neural net, and then resets the position using the fixed walk cycle. This
     class also handles the state, action and reward triples, which will allow us to run the RL algorithm of our choice.
@@ -40,11 +39,23 @@ class AntIRLEnvironment(WalkToTargetController):
     RESET_TEXT = "Resetting Environment..."
     RUNNING_TEXT = "Running Episode {}"
 
-    def __init__(self, port="/dev/ttyUSB0", speed=0.5, window_name="Ant Location"):
+    def __init__(self, port="/dev/ttyUSB0", speed=0.5, window_name="Ant Location", sensors_enabled=True):
         super().__init__(port, speed, window_name)
         self.episode_counter = 0
+        self.sensors_enabled = sensors_enabled
         self.prev_position = None
         self.previous_episode_success = None
+
+    def set_text(self, text):
+        self.locator.text = text
+
+    def set_reset_text(self):
+        if self.previous_episode_success is None:
+            self.set_text(self.RESET_TEXT)
+        if self.previous_episode_success:
+            self.set_text("Episode Successful, " + self.RESET_TEXT)
+        else:
+            self.set_text("Episode Failed, " + self.RESET_TEXT)
 
     def walk_to_reset_position(self):
         """
@@ -63,7 +74,6 @@ class AntIRLEnvironment(WalkToTargetController):
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
-
     def reward_from_position(self, position):
         forward_reward = position[0] - self.previous_position[0]
         side_penalty = (-abs(position[1] - self.INITIAL_POSITION[1])) - (
@@ -71,7 +81,7 @@ class AntIRLEnvironment(WalkToTargetController):
         )
         return forward_reward + side_penalty
 
-    def step(self, action):
+    def step_one(self, action, past_steps):
         self.servo_controller.send(WalkCycle.frame_to_command(action))
         sensor_data = self.servo_controller.get_data_if_ready()
         terminal = False
@@ -79,10 +89,20 @@ class AntIRLEnvironment(WalkToTargetController):
         if sensor_data is None:
             # If sensor data is None, then it means that either the robot is frozen or hasn't finished initalizing
             info["frozen"] = True
-            return None, None, True, info
+            if self.sensors_enabled:
+                return None, None, True, info
         position = self.get_normalised_position()
         new_orientation = self.get_orientation_vector()
-        state = (action, sensor_data, position, new_orientation)
+        if self.sensors_enabled:
+            state = self.clean_state((action, sensor_data, position, new_orientation))
+        else:
+            state = np.concatenate((action, position, new_orientation))
+        if past_steps>0:
+            if self.prev_position is None:
+                self.previous_position = state
+            state_ = state
+            state = np.concatenate((self.previous_position, state))
+            self.previous_position = state_
         reward = self.reward_from_position(position)
         if position[0] > 0.8:
             reward += 2
@@ -99,15 +119,16 @@ class AntIRLEnvironment(WalkToTargetController):
         self.previous_position = position
         if cv2.waitKey(1) & 0xFF == ord("q"):
             info["cv2_term"]
-        return self.clean_state(state), reward, terminal, info
+        return state, reward, terminal, info
+
+    def step(self, action, down_sampling=3, past_steps = 0):
+        output = None
+        for _ in range(down_sampling):
+            output = self.step_one(action, past_steps)
+        return output
 
     def reset(self):
-        if self.previous_episode_success is True:
-            self.locator.text = "Episode Successful, " + self.RESET_TEXT
-        elif self.previous_episode_success is False:
-            self.locator.text = "Episode Failed, " + self.RESET_TEXT
-        else:
-            self.locator.text = self.RESET_TEXT
+        self.prev_position = None
         self.walk_to_reset_position()
         self.randomise_initial_orientation()
         sensor_data = None
@@ -117,8 +138,10 @@ class AntIRLEnvironment(WalkToTargetController):
             position = self.get_normalised_position()
             orientation = self.get_orientation_vector()
             self.previous_position = position
-        self.locator.text = None
-        return self.clean_state((robot_state, sensor_data, position, orientation))
+        if self.sensors_enabled:
+            return self.clean_state((robot_state, sensor_data, position, orientation))
+        else:
+            return np.concatenate((robot_state, position, orientation))
 
     def render(self):
         pass
@@ -128,8 +151,10 @@ class AntIRLEnvironment(WalkToTargetController):
         Runs an episode, and saves data into an episode data object.
         """
         data = EpisodeData(self.episode_counter)
+        self.set_reset_text()
         state = self.reset()
-        self.locator.text = self.RUNNING_TEXT.format(self.episode_counter)
+        self.set_text(AntIRLEnvironment.RUNNING_TEXT.format(
+            self.episode_counter))
         for _ in range(max_len):
             if not self.servo_controller.ready:
                 return
@@ -150,9 +175,7 @@ class AntIRLEnvironment(WalkToTargetController):
             if "cv2_term" in info:
                 break
         return data
-
         self.episode_counter += 1
-        self.locator.text = None
         return data
 
     def save_data(self, data, path="TrainingData/", name="Fixed_Walk"):
@@ -163,10 +186,10 @@ class AntIRLEnvironment(WalkToTargetController):
         dir = np.random.randint(2)
         if dir == 0:
             command = WalkCommand.LEFT_TURN
-            steps = np.random.randint(15)
+            steps = np.random.randint(5)
         else:
             command = WalkCommand.RIGHT_TURN
-            steps = np.random.randint(10)
+            steps = np.random.randint(5)
         for _ in range(steps):
             self.serial_command = self.unified_walk_controller.get_next_step(command)
             self.servo_controller.send(
@@ -186,8 +209,10 @@ if __name__ == "__main__":
     wc = WalkCycle("WalkConfigs/nn_training_walk_config.yaml", speed=0.3)
     frames = wc.get_frames()
 
+
     def pred_fixed(_current_position):
         return next(frames)
+
 
     critic = HaikuPredictor.get_model_from_saved_file(
         "AntController/configs/selected_critic.p"

@@ -150,6 +150,7 @@ class HaikuActorCritic:
         self.actor.params, self.actor.optimizer_state = self._train_actor(
             self.actor.params, states, per_action_advantage, self.actor.optimizer_state
         )
+        self.actor.generations+=1
 
     def get_sampled_action(self, state, env):
         if np.random.random_sample() < self.random_action_prob:
@@ -211,6 +212,14 @@ class HaikuActorCritic:
     def get_random_action(self, env):
         return np.random.choice(env.action_space.n)
 
+    def save_weights(self):
+        self.actor.save_params()
+        self.value_critic.save_params()
+
+    def get_latest_weights(self):
+        self.actor.get_params()
+        self.value_critic.get_params()
+
 
 class HaikuContinuousActorCritic(HaikuActorCritic):
     """
@@ -234,7 +243,7 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         Calculate the log likelihoods using the PDF of normal dist, then scale with advantage to get the 'loss'.
         """
         means = self.actor._evaluate(actor_params, states)
-        log_likelihoods = jnp.log(normal_density(means, self.noise_std, actions))
+        log_likelihoods = jnp.clip(jnp.log(normal_density(means, self.noise_std, actions)), -5, 5)
         advantage_scaled_likelihood = jnp.multiply(log_likelihoods, advantages)
         # negative, since we want to gradient ascend the log likelihood * advantage and the optimizer is descending
         return -jnp.sum(advantage_scaled_likelihood)
@@ -260,6 +269,7 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         self.actor.params, self.actor.optimizer_state = self._train_continuous_actor(
             self.actor.params, states, actions, advantages, self.actor.optimizer_state
         )
+        self.actor.generations += 1
 
     def add_episode_data_to_queue(self, episode_data):
         """
@@ -274,13 +284,13 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         self.actor_training_queue["advantages"].extend(episode_data.get_advantage())
         self.actor_training_queue["actions"].extend(episode_data.actions)
 
-    def run_episode_with_actor(self, env, render, sampled, max_len=120):
+    def run_episode_with_actor(self, env, render, sampled):
         """Runs and episode with the actor, storing the SAR triple along with the values"""
         episode_data = EpisodeWithValue(
             self.episode_count, self.discount, self.action_space_size
         )
         state = env.reset()
-        for t in range(max_len):
+        while True:
             if render:
                 env.render()
             if sampled:
@@ -288,15 +298,6 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
             else:
                 action = self.get_optimal_action(state)
             state_next, reward, terminal, info = env.step(action)
-            if t == 99:
-                reward += -1
-                info["final_state"] = "fail"
-            if "frozen" in info:
-                episode_data = EpisodeWithValue(
-                    self.episode_count, self.discount, self.action_space_size
-                )
-                env.reset()
-                time.sleep(1)
             episode_data.add_step(
                 state, action, [reward], self.value_critic.evaluate(state)
             )
@@ -313,6 +314,8 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
 
     def get_optimal_action(self, state):
         return self.actor.evaluate(state)
+
+
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ class HaikuPredictor:
     """
 
     def __init__(
-        self, predictor, input_shape, learning_rate, rng, loss_func=None, name="Ant"
+            self, predictor, input_shape, learning_rate, rng, loss_func=None, name="Ant"
     ):
         self.net_t = hk.without_apply_rng(hk.transform(predictor))
         self.loss_func = loss_func
@@ -92,11 +92,9 @@ class HaikuPredictor:
 
     def get_params(self, file_name=None):
         if file_name is None:
-            max_gen = -1
-            for file_name_ in os.listdir(f"configs/{self.name}/"):
-                generation = int("".join([s for s in file_name_ if s.isdigit()]))
-                if generation > max_gen:
-                    file_name = file_name_
+            # gets the latest snapshot if not specified
+            files_names = os.listdir(f"configs/{self.name}/")
+            file_name = max(files_names, key=os.path.getctime)
         self.params = pickle.load(open(file_name, "rb"))
 
     @staticmethod

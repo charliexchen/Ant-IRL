@@ -80,7 +80,7 @@ def create_predictor_from_hyper_param_search(config, data, labels):
     return best_predictor, best_test_error, best_config
 
 
-def create_data_from_data_stores(path):
+def create_data_from_data_stores(path, sensor_enabled):
     """
     Imports multiple episode data from the pickled episode data objects. 
     In order to do sample batches for the value function easily,
@@ -89,6 +89,7 @@ def create_data_from_data_stores(path):
     """
     file_names = os.listdir(path)
     rewards, states, action, shifted_states, is_non_terminal = [], [], [], [], []
+
     for file_name in file_names:
         with open(os.path.join(path, file_name), "rb") as input_file:
             data = pickle.load(input_file)
@@ -106,8 +107,14 @@ def create_data_from_data_stores(path):
 
             rewards.extend(data.rewards)
             action.extend(data.actions)
-    states = np.delete(np.asarray(states), 18, axis=1)
-    shifted_states = np.delete(np.asarray(shifted_states), 18, axis=1)
+
+    if sensor_enabled:
+        states = np.delete(np.asarray(states), 18, axis=1)
+        shifted_states = np.delete(np.asarray(shifted_states), 18, axis=1)
+    else:
+        states = np.delete(np.asarray(states), range(8, 19), axis=1)
+        shifted_states = np.delete(np.asarray(shifted_states), range(8, 19), axis=1)
+
     return (
         np.asarray(rewards),
         states,
@@ -115,6 +122,7 @@ def create_data_from_data_stores(path):
         shifted_states,
         np.asarray(is_non_terminal),
     )
+
 
 
 def get_state_scaling(data):

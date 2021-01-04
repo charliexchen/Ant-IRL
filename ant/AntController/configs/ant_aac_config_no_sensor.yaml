@@ -1,0 +1,16 @@
+"actor_config":
+  "path": "AntController/configs/selected_actor_trained_with_noise_no_sensor.p"
+  "checkpoint_path": "AntController/configs/actor_checkpoint_no_sensor"
+  "new_learning_rate": 0.0005
+"critic_config":
+  "path": "AntController/configs/selected_critic_no_sensor.p"
+  "new_learning_rate": 0.0002
+  "checkpoint_path": "AntController/configs/critic_checkpoint_no_sensor"
+"episode_counter_path":
+"discount": 0.95
+"actor_queue_size": 128
+"critic_queue_size": 128
+"random_action_prob": 0.4
+"noise_std": 0.05
+"random_action_prob_half_life": 100
+"action_space_size": 8
