@@ -25,7 +25,7 @@ First, the robot was designed using CAD (Siemens Solid Edge) and then 3D printed
 For sensing, the arudino is also connected to a gyro/accelerometer using i2c, which gives us acceleration, the gravity vector and euler angles. Using the MPU-6050's onboard DMP feature, it is not necessary to implement further noise reduction (such as kalman filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
 
 <p align="center">
-  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant_irl.png" align="centre" width="400" ></a>
+  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant_irl.png" align="centre" width="300" ></a>
 </p>
 <p align="center"><i> <sub>"Don't talk to me or my son ever again."</sub></i> </p>
 
@@ -60,5 +60,5 @@ I implemented Advantage Actor Critic using JAX and Haiku. This was a fun framewo
 
 I tried making the predictor and AAC class as generic as opposible for future projects, and tested that it works on CartPole.
 
-Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data, and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay to try to train the robot. 
+Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data, and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay to train the agent. 
 
