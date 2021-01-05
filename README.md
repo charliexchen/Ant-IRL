@@ -3,12 +3,12 @@
 
 
 
-Ant(ony)-v2 is now a fairly standard RL task from the Open AI gym library. Since I'm stuck in lockdown, this is a project trying to bring him/her to real life. If all goes well, we can then try to train Actor-Critic on this environment.
+Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym library. Since I'm stuck in lockdown, here is a project trying to bring him/her to real life. If all goes well, we can then try to train Actor-Critic on this environment.
 
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/env_walk.gif" align="centre" width="400" >  
  </p>
-<p align="center"><i> <sub>Running Multiple Episodes in the environment to Collect Training Data</sub></i> </p>
+<p align="center"><i> <sub>Running multiple episodes in the environment to collect training data</sub></i> </p>
 
 This also gives me the opportunity to test out Haiku with JAX (https://github.com/deepmind/dm-haiku), which is a a relatively new ML framework used in Google Deepmind which promises more flexibility.
 
@@ -40,7 +40,7 @@ The capture setup is simply a cheap webcam on an angled tripod, pointing downwar
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/walk.gif" align="centre" width="400" ></a>
 </p>
-<p align="center"><i> <sub>Camera Setup and simple walk</sub></i></p>
+<p align="center"><i> <sub>Camera setup and simple walk</sub></i></p>
 
 ## Building an Environment
 
