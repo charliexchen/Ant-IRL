@@ -56,5 +56,5 @@ I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framewo
 
 I tried making the predictor and AAC class as generic as possible for future projects and tested that it works on CartPole.
 
-Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay to improve the agent. The initial data also allows for some hyperparameter selection, which was done with a simple random search. 
+Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay (TBD) to improve the agent. The initial data also allows for some hyperparameter selection, which was done with a simple random search. 
 
