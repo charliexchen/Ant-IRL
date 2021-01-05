@@ -2,6 +2,9 @@
 
 Ant(ony)-v2 is now a fairly standard RL task from the Open AI gym library. This is a project to try to bring him to real life whilst I'm stuck at home due to lock down, and then try to train Actor Critic on th environment.
 
+<p align="center">
+  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/env_walk.gif" align="centre" width="400" ></a>
+  </p>
 
 This also gives me the opportunity to test out Haiku (https://github.com/deepmind/dm-haiku), which is a a relatively new ML library used in Google Deepmind which promises more flexibility compared to many other methods.
 
@@ -13,10 +16,16 @@ This also gives me the opportunity to test out Haiku (https://github.com/deepmin
 First, the robot was designed using CAD (Siemens Solid Edge) and then 3D printed. It consists of 8 servos configured in a similar manner as Ant-v2. For control, I used an arduino nano which communicates with the PC via USB serial and the servo controller via i2c, and the position of each servo can be manipulated by sending two bytes of data.
 
 For sensing, the arudino is also connected to a gyro/accelerometer using i2c, which gives us acceleration, the gravity vector and euler angles. Using the MPU-6050's onboard DMP feature, it is not necessary to implement further noise reduction (such as kalman filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
+<p align="center">
+  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant_irl.png" align="centre" width="400" ></a>
+  </p>
 
 ## Location Detection
 
 The Robot's location and orientation relative the environment is detected via the aruco markers on the robot and and the corners of the environment. Most of this was achieved with standard libraries within OpenCV. Under the correct lighting conditions we can have the location of the robot over 99% of the time, and we can resort to last frame position or interpolating for the missing frames steps.
+<p align="center">
+  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/walk.gif" align="centre" width="400" ></a>
+  </p>
 
 ## Building an Environment
 
