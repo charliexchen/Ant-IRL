@@ -8,19 +8,18 @@ Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym libr
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/env_walk.gif" align="centre" width="400" >  
  </p>
-<p align="center"><i> <sub>Running multiple episodes in the environment to collect training data</sub></i> </p>
+<p align="center"><i> <sub>Running multiple episodes with fixed agent in the environment to collect training data. Red rectangles terminate with negative reward, green with positive reward. After an episode, the agent returns to the red circle to reset the environment. Note the aruco markers used to ensure consistent perspective in the corners of the environment. </sub></i> </p>
 
 This also gives me the opportunity to test out Haiku with JAX (https://github.com/deepmind/dm-haiku), which is a a relatively new ML framework used in Google Deepmind which promises more flexibility.
 
 ## Building the Robot
 
-First, the robot was designed using CAD (Siemens Solid Edge) and then 3D printed. It consists of 8 servos configured in a similar manner as Ant-v2. For control, I used an arduino nano which communicates with the PC via USB serial and the servo controller via i2c, and the position of each servo can be manipulated by sending two bytes of data.
+First, the robot was designed using CAD (Siemens Solid Edge) and then 3D printed using an Ender 3. The design consists of 8 servos configured in a similar manner as Ant-v2 (albeit the forelegs are shorter in order to reduce the load on the tiny 9g servos). For control, I used an Arduino Nano which communicates with the PC via USB serial and the servo controller via i2c, and the position of each servo can be manipulated by sending two bytes of data.
 
 <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant.png" width="400">
- </p>
-
-<p align="center"><i> <sub>CAD model of the robot in Solid Edge</sub></i> </p>
+</p>
+<p align="center"><i> <sub>CAD model of the robot in Solid Edge. Parts are then sliced and 3D printed.</sub></i> </p>
 
 For sensing, the arudino is also connected to a gyro/accelerometer using i2c, which gives us acceleration, the gravity vector and euler angles. Using the MPU-6050's onboard DMP feature, it is not necessary to implement further noise reduction (such as kalman filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
 
@@ -40,7 +39,7 @@ The capture setup is simply a cheap webcam on an angled tripod, pointing downwar
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/walk.gif" align="centre" width="400" ></a>
 </p>
-<p align="center"><i> <sub>Camera setup and simple walk</sub></i></p>
+<p align="center"><i> <sub>Camera setup and simple walk. Note the trailing wire connected to power and USB.</sub></i></p>
 
 ## Building an Environment
 
