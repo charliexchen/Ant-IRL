@@ -27,7 +27,7 @@ For sensing, the arudino is also connected to a gyro/accelerometer using i2c, wh
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/ant_irl.png" align="centre" width="400" ></a>
 </p>
-<p align="center"><i> <sub>Robot after assembly</sub></i> </p>
+<p align="center"><i> <sub>"Don't talk to me or my son ever again."</sub></i> </p>
 
 The robot runs on a 5v 2A DC power supply. Power and usb connection is maintained via 6 thin enameled copper wires in order to reduce cable imparting forces on the environment.
 
