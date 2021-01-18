@@ -254,13 +254,13 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
     def _train_continuous_actor(
         self, actor_params, states, actions, advantages, optimizer_state
     ):
-        gradient = jax.grad(self._advantage_scaled_log_likelihoods_normal)(
+        loss, gradient = jax.value_and_grad(self._advantage_scaled_log_likelihoods_normal)(
             actor_params, states, actions, advantages
         )
         update, new_optimizer_state = self.actor.optimizer.update(
             gradient, optimizer_state
         )
-        return optax.apply_updates(actor_params, update), new_optimizer_state
+        return optax.apply_updates(actor_params, update), new_optimizer_state, loss
 
     def train_actor(self):
         if len(self.actor_training_queue["states"]) < self.params["actor_queue_size"]:
@@ -268,10 +268,11 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         states = np.asarray(self.actor_training_queue["states"])
         advantages = np.asarray(self.actor_training_queue["advantages"])
         actions = np.asarray(self.actor_training_queue["actions"])
-        self.actor.params, self.actor.optimizer_state = self._train_continuous_actor(
+        self.actor.params, self.actor.optimizer_state, loss = self._train_continuous_actor(
             self.actor.params, states, actions, advantages, self.actor.optimizer_state
         )
         self.actor.generations += 1
+        return loss
 
     def add_episode_data_to_queue(self, episode_data):
         """

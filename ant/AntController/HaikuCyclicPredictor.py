@@ -51,7 +51,6 @@ def get_full_action_from_sample(predictor, angle, standard_deviation):
 
     lf_rb_action_mean = predictor.evaluate(phase_vector)
     rf_lb_action_mean = predictor.evaluate(shifted_phase_vector)
-    print(angle, lf_rb_action_mean)
     lf_rb_action = np.random.normal(lf_rb_action_mean, standard_deviation)
     rf_lb_action = np.random.normal(rf_lb_action_mean, standard_deviation)
     action = np.zeros(8)
@@ -104,7 +103,7 @@ class HaikuCyclicActorCritic(HaikuContinuousActorCritic):
             batch_data[key] = get_batch(self.training_queue[key], indices)
         return batch_data
 
-    def get_actor_critic_training_labels(self, batch_size):
+    def train_actor_and_critic_on_batch(self, batch_size):
         batch_data = self.get_training_batch(batch_size)
         current_state = get_vector_from_phase(batch_data["phases"], self.phase_steps)
         next_state = get_vector_from_phase(batch_data["phases"] + 1, self.phase_steps)
@@ -118,16 +117,18 @@ class HaikuCyclicActorCritic(HaikuContinuousActorCritic):
 
         importance_weighted_advantage = np.multiply(advantage, importance_weight)
 
-        self.actor.params, self.actor.optimizer_state = self._train_continuous_actor(
+        self.actor.params, self.actor.optimizer_state, actor_loss = self._train_continuous_actor(
             self.actor.params, current_state, batch_data["actions"],
             importance_weighted_advantage.reshape((batch_size, 1)),
             self.actor.optimizer_state
         )
         self.actor.generations += 1
 
-        self.value_critic.params, self.value_critic.optimizer_state, loss = self._train_weighted_critic(
+        self.value_critic.params, self.value_critic.optimizer_state, critic_loss = self._train_weighted_critic(
             self.value_critic.params, current_state, value, importance_weight, self.value_critic.optimizer_state)
         self.value_critic.generations += 1
+
+        return actor_loss, critic_loss
 
     def _weighted_critic_loss(
             self, critic_params, states, values, weights
@@ -147,9 +148,9 @@ class HaikuCyclicActorCritic(HaikuContinuousActorCritic):
 
     def run_episode_with_actor(self, env, max_len=100):
         """Runs and episode with the actor, storing the SAR triple along with the values and such"""
-        env.reset()
+
         self.phase = self.params["init_step"]
-        for _t in range(max_len):
+        for t in range(max_len):
 
             phase_action, phase_probility, anti_phase_action, anti_phase_probility, full_action \
                 = get_full_action_from_sample(
@@ -158,7 +159,7 @@ class HaikuCyclicActorCritic(HaikuContinuousActorCritic):
                 self.noise_std
             )
 
-            _state_next, reward, terminal, _info = env.step(full_action)
+            _state_next, reward, terminal, info = env.step(full_action)
 
             self.update_training_queue(self.phase, reward, phase_action, phase_probility)
             self.update_training_queue((self.phase + int(self.phase_steps / 2)) % self.phase_steps, reward,
@@ -168,6 +169,8 @@ class HaikuCyclicActorCritic(HaikuContinuousActorCritic):
                 break
         self.episode_count += 1
         self.random_action_prob *= self.random_action_prob_decay
+        info["episode_length"] = t
+        return info
 
 
 class AntCyclicEnvironment(AntIRLEnvironment):
@@ -199,10 +202,13 @@ class AntCyclicEnvironment(AntIRLEnvironment):
         reward = self.reward_from_position(position, new_orientation)
         if position[0] > 0.8:
             terminal = True
+            info["success"] = True
         elif abs(position[1] - self.INITIAL_POSITION[1]) > 0.25:
             terminal = True
+            info["success"] = False
         if cv2.waitKey(1) & 0xFF == ord("q"):
             info["cv2_term"]
+
         return (state, reward, terminal, info), position
 
     def step(self, action, down_sampling=4):
@@ -221,20 +227,52 @@ if __name__ == "__main__":
     import yaml
     from collections import deque
 
+    import pickle
+
     path = "AntController/configs/fixed_cycle_configs/fixed_cycle_acc_config.yaml"
     with open(path) as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
     aac = HaikuCyclicActorCritic(config)
+    aac.actor.name = "fixed_cycle_actor"
+    aac.value_critic.name = "fixed_cycle_critic"
     input_dataset = WalkCycle(
         "WalkConfigs/nn_training_walk_config.yaml", speed=0.3
     ).get_all_frames()
 
     phase = 0
     env = AntCyclicEnvironment()
-    for _ in range(100):
-        aac.run_episode_with_actor(env)
-        aac.get_actor_critic_training_labels(64)
+    data = {
+        "actor_loss": [],
+        "critic_loss": [],
+        "success": [],
+        "episode_length": []
+    }
+    try:
+        for generation in range(1000):
+            env.set_text("Resetting Environment...")
+            env.reset()
+            env.set_text(f"Running Episode {generation}")
+            info = aac.run_episode_with_actor(env)
+            actor_loss, critic_loss = aac.train_actor_and_critic_on_batch(64)
+            data["actor_loss"].append(actor_loss)
+            data["critic_loss"].append(critic_loss)
+            if "success" in info:
+                data["success"].append(info["success"])
+            else:
+                data["success"].append(None)
+            if "episode_length" in info:
+                data["episode_length"].append(info["episode_length"])
+            else:
+                data["episode_length"].append(None)
+            if generation % 5 == 0:
+                print("Generation {} took {} frames".format(generation, data["episode_length"][-1]))
+                print("saving weights...")
+                #aac.save_weights()
 
+    finally:
+        print("saving data...")
+        file_name = f"AntController/configs/fixed_frame_data.p"
+        #pickle.dump(data, open(file_name, "wb"))
     try:
         while True:
             phase += 2 * np.pi / 10
@@ -242,7 +280,7 @@ if __name__ == "__main__":
             arduino_controller.send({key: value for key, value in enumerate(action)})
             data = arduino_controller.get_data_if_ready()
 
-            time.sleep(0.2)
+            time.sleep(0.5)
     finally:
         arduino_controller.send_idle_command()
         arduino_controller.close_ports()
