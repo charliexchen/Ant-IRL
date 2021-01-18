@@ -1,5 +1,5 @@
 "actor_config":
-  "path": "AntController/configs/selected_actor_trained_with_noise_no_sensor_multi_step.p"
+  "path": "AntController/configs/selected_actor_trained_with_loop_no_sensor_multi_step.p"
   "new_learning_rate": 0.0005
 "critic_config":
   "path": "AntController/configs/selected_critic_no_sensor_multi_step.p"

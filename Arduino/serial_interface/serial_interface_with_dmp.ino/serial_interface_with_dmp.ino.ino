@@ -125,7 +125,7 @@ void setup() {
   // configure LED for output
   pinMode(LED_PIN, OUTPUT);
   delay(500);
-  Serial.println("Ready!");
+  Serial.println("Ant Ready!");
    delay(500);
 }
 

@@ -39,12 +39,19 @@ class AntIRLEnvironment(WalkToTargetController):
     RESET_TEXT = "Resetting Environment..."
     RUNNING_TEXT = "Running Episode {}"
 
-    def __init__(self, port="/dev/ttyUSB0", speed=0.5, window_name="Ant Location", sensors_enabled=True):
+    def __init__(
+        self,
+        port="/dev/ttyUSB0",
+        speed=0.5,
+        window_name="Ant Actor Critic",
+        sensors_enabled=True,
+    ):
         super().__init__(port, speed, window_name)
         self.episode_counter = 0
         self.sensors_enabled = sensors_enabled
-        self.prev_position = None
         self.previous_episode_success = None
+        self.previous_position = None
+        self.previous_robot_configuration = None
 
     def set_text(self, text):
         self.locator.text = text
@@ -81,7 +88,10 @@ class AntIRLEnvironment(WalkToTargetController):
         )
         return forward_reward + side_penalty
 
-    def step_one(self, action, past_steps):
+    def step_one(self, action, delta_action=False):
+        if delta_action:
+            action = self.previous_robot_configuration + action
+            self.previous_robot_configuration = action
         self.servo_controller.send(WalkCycle.frame_to_command(action))
         sensor_data = self.servo_controller.get_data_if_ready()
         terminal = False
@@ -97,12 +107,6 @@ class AntIRLEnvironment(WalkToTargetController):
             state = self.clean_state((action, sensor_data, position, new_orientation))
         else:
             state = np.concatenate((action, position, new_orientation))
-        if past_steps>0:
-            if self.prev_position is None:
-                self.previous_position = state
-            state_ = state
-            state = np.concatenate((self.previous_position, state))
-            self.previous_position = state_
         reward = self.reward_from_position(position)
         if position[0] > 0.8:
             reward += 2
@@ -121,10 +125,10 @@ class AntIRLEnvironment(WalkToTargetController):
             info["cv2_term"]
         return state, reward, terminal, info
 
-    def step(self, action, down_sampling=3, past_steps = 0):
+    def step(self, action, down_sampling=3):
         output = None
         for _ in range(down_sampling):
-            output = self.step_one(action, past_steps)
+            output = self.step_one(action)
         return output
 
     def reset(self):
@@ -138,6 +142,7 @@ class AntIRLEnvironment(WalkToTargetController):
             position = self.get_normalised_position()
             orientation = self.get_orientation_vector()
             self.previous_position = position
+        self.previous_robot_configuration = robot_state
         if self.sensors_enabled:
             return self.clean_state((robot_state, sensor_data, position, orientation))
         else:
@@ -153,8 +158,7 @@ class AntIRLEnvironment(WalkToTargetController):
         data = EpisodeData(self.episode_counter)
         self.set_reset_text()
         state = self.reset()
-        self.set_text(AntIRLEnvironment.RUNNING_TEXT.format(
-            self.episode_counter))
+        self.set_text(AntIRLEnvironment.RUNNING_TEXT.format(self.episode_counter))
         for _ in range(max_len):
             if not self.servo_controller.ready:
                 return
@@ -205,14 +209,123 @@ class AntIRLEnvironment(WalkToTargetController):
         return np.delete(np.asarray(state), 18)
 
 
+class AntIRLEnvironmentMultiStep(AntIRLEnvironment):
+    def __init__(
+        self,
+        port="/dev/ttyUSB0",
+        speed=0.5,
+        window_name="Ant Location",
+        sensors_enabled=True,
+        past_steps=1,
+        delta_action=False,
+    ):
+        super().__init__(port, speed, window_name, sensors_enabled)
+
+        self.past_steps = past_steps
+        self.previous_state = None
+        self.delta_action = delta_action
+
+    def get_multi_step_state(self, state):
+        if self.previous_state is None:
+            multi_step_state = np.tile(state, self.past_steps + 1)
+        else:
+            multi_step_state = np.concatenate((self.previous_state, state))[
+                len(state) :
+            ]
+        self.previous_state = multi_step_state
+        return multi_step_state
+
+    def step(self, action, down_sampling=3):
+        output = None
+        for _ in range(down_sampling):
+            output = self.step_one(action, self.delta_action)
+        state, reward, terminal, info = output
+        multi_step_state = self.get_multi_step_state(state)
+        return multi_step_state, reward, terminal, info
+
+    def reset(self):
+        state = super().reset()
+        self.previous_state = None
+        return self.get_multi_step_state(state)
+
+
+class AntIRLEnvironmentSimplified(AntIRLEnvironment):
+    INT_TO_COMMAND_MAP = {
+        0: WalkCommand.FORWARD,
+        1: WalkCommand.LEFT_TURN,
+        3: WalkCommand.RIGHT_TURN,
+    }
+
+    def __init__(
+        self,
+        port="/dev/ttyUSB0",
+        speed=0.5,
+        window_name="Ant Location",
+        sensors_enabled=True,
+    ):
+        super().__init__(port, speed, window_name, sensors_enabled)
+        self.current_action = None
+
+    def step(self, command, down_sampling=10):
+        output = None
+        walk_command = self.INT_TO_COMMAND_MAP[command]
+        for _ in range(down_sampling):
+            action = self.unified_walk_controller.get_next_step(walk_command)
+            output = self.step_one(action, self.delta_action)
+        state, reward, terminal, info = output
+        multi_step_state = self.get_multi_step_state(state)
+        return multi_step_state, reward, terminal, info
+
+    def reset(self):
+        self.prev_position = None
+        self.walk_to_reset_position()
+        self.randomise_initial_orientation()
+        sensor_data = None
+        while sensor_data is None:
+            sensor_data = self.servo_controller.get_data_if_ready()
+            position = self.get_normalised_position()
+            orientation = self.get_orientation_vector()
+            self.previous_position = position
+        return np.concatenate((position, orientation))
+
+    def step_one(self, action):
+        self.servo_controller.send(WalkCycle.frame_to_command(action))
+        sensor_data = self.servo_controller.get_data_if_ready()
+        terminal = False
+        info = {}
+        if sensor_data is None:
+            # If sensor data is None, then it means that either the robot is frozen or hasn't finished initalizing
+            info["frozen"] = True
+            if self.sensors_enabled:
+                return None, None, True, info
+        position = self.get_normalised_position()
+        new_orientation = self.get_orientation_vector()
+        state = self.clean_state((position, new_orientation))
+        reward = self.reward_from_position(position)
+        if position[0] > 0.8:
+            reward += 2
+            terminal = True
+            info["final_reward"] = 2
+            info["final_state"] = "success"
+            self.previous_episode_success = True
+        elif abs(position[1] - self.INITIAL_POSITION[1]) > 0.25:
+            reward += -1
+            terminal = True
+            info["final_reward"] = -1
+            info["final_state"] = "fail"
+            self.previous_episode_success = False
+        self.previous_position = position
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            info["cv2_term"]
+        return state, reward, terminal, info
+
+
 if __name__ == "__main__":
     wc = WalkCycle("WalkConfigs/nn_training_walk_config.yaml", speed=0.3)
     frames = wc.get_frames()
 
-
     def pred_fixed(_current_position):
         return next(frames)
-
 
     critic = HaikuPredictor.get_model_from_saved_file(
         "AntController/configs/selected_critic.p"

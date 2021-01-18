@@ -15,6 +15,23 @@ unsigned int raw_command = 0;
 
 int granularity = 1;
 
+typedef struct {
+  float qw = 0;
+  float qx = 0;
+  float qy = 0;
+  float qz = 0;
+  float y = 0;
+  float p = 0;
+  float r = 0;
+  float gx = 0;
+  float gy = 0;
+  float gz = 0;
+  float ed = 99999999.9;
+} __attribute__((__packed__))data_packet_t;
+
+data_packet_t dp;
+
+
 void setup() {
   Serial.begin(9600);    // opens serial port, sets data rate to 9600 bps
 
@@ -22,7 +39,9 @@ void setup() {
   pwm.setOscillatorFrequency(27000000);
   pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
 
-  delay(5);
+  delay(300);
+  Serial.println("Ant Ready!");
+  delay(300);
 }
 
 void loop() {
@@ -47,6 +66,7 @@ void loop() {
     uint16_t raw_ms_command = (currentCommands[i] * granularity);
     pwm.writeMicroseconds(raw_servo_id, raw_ms_command);
   }
+  Serial.write((byte*)&dp, sizeof(dp));
   pwm.writeMicroseconds(0, 600);
   delay(10);
   pwm.writeMicroseconds(0, 1500);

@@ -11,7 +11,7 @@ from jax import jit
 from jax.tree_util import partial
 
 from AntController.JaxUtils import squared_loss, gen_mlp_from_config
-from ServoController.WalktCycleConfigParser import WalkCycle
+
 
 
 class HaikuPredictor:
@@ -21,7 +21,7 @@ class HaikuPredictor:
     """
 
     def __init__(
-            self, predictor, input_shape, learning_rate, rng, loss_func=None, name="Ant"
+        self, predictor, input_shape, learning_rate, rng, loss_func=None, name="Ant"
     ):
         self.net_t = hk.without_apply_rng(hk.transform(predictor))
         self.loss_func = loss_func
@@ -66,9 +66,9 @@ class HaikuPredictor:
 
     @functools.partial(jax.jit, static_argnums=0)
     def _train_batch(self, params, states, labels, optimizer_state):
-        value, gradient = jax.value_and_grad(self._loss)(params, states, labels)
+        loss, gradient = jax.value_and_grad(self._loss)(params, states, labels)
         update, new_optimizer_state = self.optimizer.update(gradient, optimizer_state)
-        return optax.apply_updates(params, update), new_optimizer_state, value
+        return optax.apply_updates(params, update), new_optimizer_state, loss
 
     def get_loss(self, states, labels):
         return self._loss(self.params, states, labels)
@@ -151,35 +151,46 @@ if __name__ == "__main__":
     Quick loop to import a a config from a yaml and try to train it on a fixed walk loop to verify testing.
     """
     import yaml
+    from collections import deque
+    from ServoController.WalktCycleConfigParser import WalkCycle
 
     path = "AntController/configs/fixed_trainer_config.yaml"
     with open(path) as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
     ant_controller = HaikuPredictor.generate_controller_from_config(config)
-    input_dataset = WalkCycle().get_training_data(1)
-    current_pos, next_pos = next(input_dataset)
+    input_dataset = WalkCycle(
+        "WalkConfigs/nn_training_walk_config.yaml", speed=0.3
+    ).get_frames()
+    current_pos = next(input_dataset)
+    actual_pos = None
     print("start!")
     c = 0
-    l = []
+    l = deque(maxlen=1000)
     try:
         while True:
-            ant_controller.train_batch(
-                np.asarray([current_pos]), np.asarray([next_pos])
+            new_pos = next(input_dataset)
+            step = new_pos - current_pos
+
+            noise = np.random.normal(0, 0.1, 8)
+            loss = ant_controller.train_batch(
+                np.asarray([current_pos]) + noise, np.asarray([step]) - noise
             )
-            _current_pos, next_pos = next(input_dataset)
-            current_pos = ant_controller.evaluate(current_pos)
-            label = next_pos - current_pos
-            loss = ant_controller.get_loss(
-                np.asarray([current_pos]), np.asarray([next_pos])
-            )
+            if actual_pos is not None:
+                correcting_step = new_pos - actual_pos
+                loss_ = ant_controller.train_batch(
+                    np.asarray([actual_pos]), np.asarray([correcting_step])
+                )
+                l.append(loss_)
+
+            actual_pos = current_pos + ant_controller.evaluate(current_pos)
+            current_pos = new_pos
             l.append(loss)
+
             c += 1
-            if len(l) > 1000:
-                l.pop(0)
             if c % 100 == 0:
                 print(
                     str.format(
-                        "current loss: {0:.5f}, running average: {0:.5f}",
+                        "current loss: {0:.5f}, running average: {1:.5f}",
                         loss,
                         sum(l) / len(l),
                     )

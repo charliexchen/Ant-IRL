@@ -150,7 +150,7 @@ class HaikuActorCritic:
         self.actor.params, self.actor.optimizer_state = self._train_actor(
             self.actor.params, states, per_action_advantage, self.actor.optimizer_state
         )
-        self.actor.generations+=1
+        self.actor.generations += 1
 
     def get_sampled_action(self, state, env):
         if np.random.random_sample() < self.random_action_prob:
@@ -223,7 +223,7 @@ class HaikuActorCritic:
 
 class HaikuContinuousActorCritic(HaikuActorCritic):
     """
-    For AAC in continuous action spaces. This considers the policy to be a normal distribution with the NN output being
+    For fixed_cycle_configs in continuous action spaces. This considers the policy to be a normal distribution with the NN output being
     the mean (and possibly the variance in the future)
     """
 
@@ -243,7 +243,9 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         Calculate the log likelihoods using the PDF of normal dist, then scale with advantage to get the 'loss'.
         """
         means = self.actor._evaluate(actor_params, states)
-        log_likelihoods = jnp.clip(jnp.log(normal_density(means, self.noise_std, actions)), -5, 5)
+        log_likelihoods = jnp.clip(
+            jnp.log(normal_density(means, self.noise_std, actions)), -5, 5
+        )
         advantage_scaled_likelihood = jnp.multiply(log_likelihoods, advantages)
         # negative, since we want to gradient ascend the log likelihood * advantage and the optimizer is descending
         return -jnp.sum(advantage_scaled_likelihood)
@@ -314,8 +316,6 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
 
     def get_optimal_action(self, state):
         return self.actor.evaluate(state)
-
-
 
 
 if __name__ == "__main__":

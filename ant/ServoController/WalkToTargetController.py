@@ -40,6 +40,8 @@ class WalkToTargetController:
         )
 
     def align_orientation_command(self, orientation, target_orientation=np.pi / 2):
+        if orientation is None:
+            return WalkCommand.IDLE
         discrepancy = orientation - target_orientation
         if discrepancy > np.pi:
             discrepancy -= np.pi * 2

@@ -204,7 +204,7 @@ class SerialServoController:
         self.buffer = []
         self.latest = []
         self.reset_counter = 0
-        self.wait_for_connection()
+        # self.wait_for_connection()
 
     def wait_for_connection(self):
         while not self.ready or self.latest == []:

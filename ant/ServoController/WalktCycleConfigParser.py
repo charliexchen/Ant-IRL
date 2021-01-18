@@ -98,15 +98,16 @@ class WalkCycle:
             input_frames.pop(0)
             label_frame = next(commands)
 
-    def _get_all_frames(self):
+    def get_all_frames(self):
         frames = []
         frame_generator = self.get_frames()
         for _ in range(sum(self.wait_frames)):
             frames.append(next(frame_generator))
         self.all_frames = frames
+        return self.all_frames
 
     def get_closest_frame_id(self, current_frame):
-        self._get_all_frames()
+        self.get_all_frames()
         min_ind = 0
         min_distance = np.linalg.norm(current_frame - self.all_frames[0])
         for i, frame in enumerate(self.all_frames):

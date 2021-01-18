@@ -124,7 +124,6 @@ def create_data_from_data_stores(path, sensor_enabled):
     )
 
 
-
 def get_state_scaling(data):
     rewards, states, action, shifted_states, is_non_terminal = data
     return np.mean(states, axis=0), np.std(states, axis=0)

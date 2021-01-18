@@ -1,0 +1,15 @@
+"mlp":
+  "layers":
+    - "type": "linear"
+      "size": 1024
+    - "type": "lrelu"
+    - "type": "linear"
+      "size": 2
+  "scale": 1
+  "shift": 0
+"loss": "squared_loss"
+"rng_key": 42
+"learning_rate" : 0.0001
+"decay": 0.999999
+"input_shape": 2
+"name": "ant_walker_cyclic"
