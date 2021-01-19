@@ -5,7 +5,7 @@ Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym libr
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/walk_comparison.gif" align="centre" width="800" >  
  </p>
-<p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay. Left: pretrained agent with no additional optimisation. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
+<p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay. Left: pretrained agent with some random noise in actions. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
 
 This also allows me to test out Haiku with JAX (https://github.com/deepmind/dm-haiku), which is a relatively new ML framework used at Google Deepmind.
 
@@ -52,7 +52,7 @@ In order to reset the environment, a simple fixed walk cycle loop is implemented
 
 ## Implementing and Running AAC
 
-I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, in addition to any other high-speed operations.
+I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, even though the overall feature gap isn't huge. I especially liked how for autograd, we just use grad() which is treated as a operator as a function instead.
 
 I tried making the predictor and AAC class as generic as possible for future projects and tested that it works on CartPole.
 
