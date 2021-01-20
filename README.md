@@ -3,7 +3,7 @@
 Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym library. As a challenge, I decided to bring him to real life and train advantage actor critic on a physical robot.
 
  <p align="center">
-   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/walk_comparison.gif" align="centre" width="800" >
+   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk_comparison.gif" align="centre" width="800" >
  </p>
 <p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay. Left: pretrained agent with some random noise in actions. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
 
@@ -59,7 +59,7 @@ I tried making the predictor and AAC class as generic as possible for future pro
 Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay to improve the agent. The initial data also allows for some hyperparameter selection, which was done with a simple random search. 
 
  <p align="center">
-   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/env_walk.gif" align="centre" width="400" >  
+   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/env_walk.gif" align="centre" width="400" >  
  </p>
 <p align="center"><i> <sub>Running multiple episodes with fixed agent in the environment to collect training data. Red rectangles terminate with negative reward, green with positive reward. After an episode, the agent returns to the red circle to reset the environment. Note the aruco markers used to ensure consistent perspective in the corners of the environment. </sub></i> </p>
 
