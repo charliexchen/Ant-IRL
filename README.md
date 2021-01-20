@@ -1,24 +1,24 @@
 # Ant-IRL
 
-Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym library. Since I'm stuck in lockdown, here is a project trying to bring him/her to real life. If all goes well, we can then try to train Actor-Critic on this environment.
+Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym library. As a challenge, I decided to bring him to real life and train advantage actor critic on a physical robot.
 
  <p align="center">
-   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/env_walk.gif" align="centre" width="400" >  
+   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/walk_comparison.gif" align="centre" width="800" >
  </p>
-<p align="center"><i> <sub>Running multiple episodes with fixed agent in the environment to collect training data. Red rectangles terminate with negative reward, green with positive reward. After an episode, the agent returns to the red circle to reset the environment. Note the aruco markers used to ensure consistent perspective in the corners of the environment. </sub></i> </p>
+<p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay. Left: pretrained agent with some random noise in actions. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
 
-This also allows me to test out Haiku with JAX (https://github.com/deepmind/dm-haiku), which is a relatively new ML framework used in Google Deepmind which promises more flexibility.
+This also allows me to test out Haiku with JAX (https://github.com/deepmind/dm-haiku), which is a relatively new ML framework used at Google Deepmind.
 
 ## Building the Robot
 
-First, the robot was designed using CAD (Siemens Solid Edge) and then 3D printed using an Ender 3. The design consists of 8 servos configured similarly as Ant-v2 (albeit the forelegs are shorter to reduce the load on the tiny 9g servos). For control, I used an Arduino Nano which communicates with the PC via USB serial and the servo controller via i2c, and the position of each servo can be manipulated by sending two bytes of data.
+First, the robot was designed using CAD (Siemens Solid Edge) and then 3D printed using my Creality Ender 3. The design consists of 8 servos in a similar configuration to Ant-v2 (albeit the forelegs are shorter to reduce the load on the tiny 9g servos). For control, I used an Arduino Nano which communicates with my desktop via USB serial and the servo controller via i2c. The position of each servo can be manipulated by sending two bytes of data.
 
 <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant.png" width="400">
 </p>
 <p align="center"><i> <sub>CAD model of the robot in Solid Edge. Parts are then sliced and 3D printed.</sub></i> </p>
 
-For sensing, the Arduino is also connected to a gyro/accelerometer using i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
+For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
 
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant_irl.png" align="centre" width="300" ></a>
@@ -48,13 +48,18 @@ With the above setup, we can implement a state-action-reward loop, which forms t
 
 In order to reset the environment, a simple fixed walk cycle loop is implemented. This allows the robot to walk itself back to the starting position. We can also collect data on this fixed walk cycle in order to pretrain policies/value functions.
 
-(With the fix walk cycle, the robot can walk in 4 cardinal directions and turn with keyboard commands -- This makes room for lots of fun future projects :D)
+(With the fix walk cycle, the robot can walk in 4 cardinal directions and turn with keyboard commands -- This makes room for lots of fun future projects)
 
 ## Implementing and Running AAC
 
-I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, in addition to any other high-speed operations.
+I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, even though the overall feature gap isn't huge. I especially liked how for autograd, we just use grad() which is treated as a operator as a function instead.
 
 I tried making the predictor and AAC class as generic as possible for future projects and tested that it works on CartPole.
 
-Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay (TBD) to improve the agent. The initial data also allows for some hyperparameter selection, which was done with a simple random search. 
+Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay to improve the agent. The initial data also allows for some hyperparameter selection, which was done with a simple random search. 
+
+ <p align="center">
+   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Parts/env_walk.gif" align="centre" width="400" >  
+ </p>
+<p align="center"><i> <sub>Running multiple episodes with fixed agent in the environment to collect training data. Red rectangles terminate with negative reward, green with positive reward. After an episode, the agent returns to the red circle to reset the environment. Note the aruco markers used to ensure consistent perspective in the corners of the environment. </sub></i> </p>
 
