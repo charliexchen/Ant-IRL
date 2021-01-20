@@ -217,7 +217,7 @@ if __name__ == "__main__":
     print sensor data. When we close the programme with keyboard interrupt, we close the connection. """
     arduino_controller = SerialServoController("/dev/ttyUSB0")
     walk_cycle = WalkCycle(
-        "WalkConfigs/simple_walk_left_turn_config.yaml"
+        "walk_cycle_configs/simple_walk_left_turn_config.yaml"
     ).get_commands()
     try:
         while True:

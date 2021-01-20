@@ -149,14 +149,14 @@ class UnifiedFixedWalkController:
     """
 
     DEFAULT_WALK_CYCLE_MAP = {
-        WalkCommand.IDLE: "WalkConfigs/simple_walk_idle_config.yaml",
-        WalkCommand.FORWARD: "WalkConfigs/simple_walk_forward_config.yaml",
-        WalkCommand.LEFT: "WalkConfigs/simple_walk_left_config.yaml",
-        WalkCommand.BACK: "WalkConfigs/simple_walk_back_config.yaml",
-        WalkCommand.RIGHT: "WalkConfigs/simple_walk_right_config.yaml",
-        WalkCommand.LEFT_TURN: "WalkConfigs/simple_walk_left_turn_config.yaml",
-        WalkCommand.RIGHT_TURN: "WalkConfigs/simple_walk_right_turn_config.yaml",
-        WalkCommand.DANCE: "WalkConfigs/dance_config.yaml",
+        WalkCommand.IDLE: "walk_cycle_configs/simple_walk_idle_config.yaml",
+        WalkCommand.FORWARD: "walk_cycle_configs/simple_walk_forward_config.yaml",
+        WalkCommand.LEFT: "walk_cycle_configs/simple_walk_left_config.yaml",
+        WalkCommand.BACK: "walk_cycle_configs/simple_walk_back_config.yaml",
+        WalkCommand.RIGHT: "walk_cycle_configs/simple_walk_right_config.yaml",
+        WalkCommand.LEFT_TURN: "walk_cycle_configs/simple_walk_left_turn_config.yaml",
+        WalkCommand.RIGHT_TURN: "walk_cycle_configs/simple_walk_right_turn_config.yaml",
+        WalkCommand.DANCE: "walk_cycle_configs/dance_config.yaml",
     }
 
     def __init__(
