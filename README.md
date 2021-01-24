@@ -5,7 +5,7 @@ Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym libr
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk_comparison.gif" align="centre" width="800" >
  </p>
-<p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay. Left: pretrained agent with some random noise in actions. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
+<p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay in the simplified environment. Left: pretrained agent with some random noise in actions. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
 
 This also allows me to test out Haiku with JAX (https://github.com/deepmind/dm-haiku), which is a relatively new ML framework used at Google Deepmind.
 
@@ -42,9 +42,9 @@ The capture setup is simply a cheap webcam on an angled tripod, pointing downwar
 
 With the above setup, we can implement a state-action-reward loop, which forms the basis of an RL environment. The robot would walk forth, collect data, train on that data and repeat the process using the RL algorithm of choice. 
 
-* State consists of sensor inputs, absolute position, orientation, servo positions, creating a 22-dimensional vector
-* Actions are 8 dimensions, consisting of either new servo positions or deltas between the current position to the next
-* Reward is based on position, with +2 if it reaches the end of the field, -1 if it goes too far off the side and up to 1 for moving from left to right.
+* State consists of sensor inputs, absolute position, orientation, servo positions, creating a 22-dimensional vector (simplified version removes sensor data)
+* Actions are 8 dimensions, consisting of either new servo positions or deltas between the current position to the next.
+* Reward is based on position, with +2 if it reaches the end of the field, -1 if it goes too far off the side and up to 1 for moving from left to right. (velocity dotted with the normalised orientation vector in the simplified version)
 
 In order to reset the environment, a simple fixed walk cycle loop is implemented. This allows the robot to walk itself back to the starting position. We can also collect data on this fixed walk cycle in order to pretrain policies/value functions.
 
@@ -52,9 +52,9 @@ In order to reset the environment, a simple fixed walk cycle loop is implemented
 
 ## Implementing and Running AAC
 
-I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, even though the overall feature gap isn't huge. I especially liked how for autograd, we just use grad() which is treated as a operator as a function instead.
+I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, even though the overall feature gap isn't huge. I especially liked how for autograd, we use grad which is treated like a function operator much like how gradients are represented mathematically.
 
-I tried making the predictor and AAC class as generic as possible for future projects and tested that it works on CartPole.
+I make the predictor and AAC class as generic as possible for future projects, and tested that it works on CartPole.
 
 Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay to improve the agent. The initial data also allows for some hyperparameter selection, which was done with a simple random search. 
 
