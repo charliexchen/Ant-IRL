@@ -1,6 +1,9 @@
 # Ant-IRL
 
-Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym library. As a challenge, I decided to bring him to real life and train advantage actor critic on a physical robot.
+Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym library. This project aims to achieve three goals:
+* Build a physical robot in a similar configuration to Ant-v2
+* Train Actor Critic on a physical environment with no simulation
+* Keep me sane over the course of the third national lockdown
 
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk_comparison.gif" align="centre" width="800" >
@@ -25,13 +28,13 @@ For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, whic
 </p>
 <p align="center"><i> <sub>"Don't talk to me or my son ever again."</sub></i> </p>
 
-The robot runs on a 5v 2A DC power supply. Power and USB connection is maintained via 6 thin enamelled copper wires to reduce cable imparting forces on the environment.
+The robot runs on a 5v 2A DC power supply. Power and USB connection is maintained using 6 thin enamelled copper wires. This minimises any forces a stiff USB/power cable might impart onto the robot.
 
 ## Location Detection
 
 The Robot's location and orientation relative to the environment is detected via the large aruco marker on top of the robot and markers on the corners of the environment. This was achieved with the aruco module in OpenCV. Under the correct lighting conditions, we can have the location of the robot over 99% of the time, and we can resort to last frame position or interpolating for any missing frames steps.
 
-The capture setup is simply a cheap webcam on an angled tripod, pointing downwards. With the locations of the corners of the environment, perspective and fisheye distortion can be corrected with standard OpenCV operations.
+The capture setup consists of a cheap webcam on an angled tripod, pointing downwards. With the locations of the corners of the environment, perspective and fisheye distortion can be corrected with standard OpenCV operations.
 
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk.gif" align="centre" width="400" ></a>
@@ -46,9 +49,10 @@ With the above setup, we can implement a state-action-reward loop, which forms t
 * Actions are 8 dimensions, consisting of either new servo positions or deltas between the current position to the next.
 * Reward is based on position, with +2 if it reaches the end of the field, -1 if it goes too far off the side and up to 1 for moving from left to right. (velocity dotted with the normalised orientation vector in the simplified version)
 
-In order to reset the environment, a simple fixed walk cycle loop is implemented. This allows the robot to walk itself back to the starting position. We can also collect data on this fixed walk cycle in order to pretrain policies/value functions.
-
-(With the fix walk cycle, the robot can walk in 4 cardinal directions and turn with keyboard commands -- This makes room for lots of fun future projects)
+A hand engineered walk cycle is also implemented. This was done for three reasons:
+* Given a target and the robot's position, you can let the robot move up/down/left/right until it reached the target. This gives us a reliable method of resetting the robot's position after running an episode.
+* We can collect data on this fixed walk cycle (in particular accelerometer/gyro data) in order to pretrain policiy/value functions.
+* This makes room for lots of fun future, non deep learning projects. I can simply map the commands to keyboard/some other controller, and we basically have a walker which can reliably move in any direction.
 
 ## Implementing and Running AAC
 
@@ -62,4 +66,3 @@ Since this is a physical environment with one agent, we are very data constraine
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/env_walk.gif" align="centre" width="400" >  
  </p>
 <p align="center"><i> <sub>Running multiple episodes with fixed agent in the environment to collect training data. Red rectangles terminate with negative reward, green with positive reward. After an episode, the agent returns to the red circle to reset the environment. Note the aruco markers used to ensure consistent perspective in the corners of the environment. </sub></i> </p>
-
