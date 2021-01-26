@@ -14,14 +14,14 @@ This also allows me to test out Haiku with JAX (https://github.com/deepmind/dm-h
 
 ## Building the Robot
 
-First, the robot was designed using CAD (Siemens Solid Edge) and then 3D printed using my Creality Ender 3. The design consists of 8 servos in a similar configuration to Ant-v2 (albeit the forelegs are shorter to reduce the load on the tiny 9g servos). For control, I used an Arduino Nano which communicates with my desktop via USB serial and the servo controller via i2c. The position of each servo can be manipulated by sending two bytes of data.
+First, the robot was designed using Siemens Solid Edge CE (a powerful but free CAD software) and then 3D printed using my Creality Ender 3. The design consists of 8 servos in a similar configuration to Ant-v2 (albeit the forelegs are shorter to reduce the load on the tiny 9g servos). For control, I used an Arduino Nano which communicates with my desktop via USB serial and the servo controller via i2c. The position of each servo can be manipulated by sending two bytes of data.
 
 <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant.png" width="400">
 </p>
 <p align="center"><i> <sub>CAD model of the robot in Solid Edge. Parts are then sliced and 3D printed.</sub></i> </p>
 
-For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
+For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050 sensor board's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman/complement filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
 
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant_irl.png" align="centre" width="300" ></a>
@@ -34,7 +34,7 @@ The robot runs on a 5v 2A DC power supply. Power and USB connection is maintaine
 
 The Robot's location and orientation relative to the environment is detected via the large aruco marker on top of the robot and markers on the corners of the environment. This was achieved with the aruco module in OpenCV. Under the correct lighting conditions, we can have the location of the robot over 99% of the time, and we can resort to last frame position or interpolating for any missing frames steps.
 
-The capture setup consists of a cheap webcam on an angled tripod, pointing downwards. With the locations of the corners of the environment, perspective and fisheye distortion can be corrected with standard OpenCV operations.
+The capture setup consists of a cheap webcam on an angled tripod, pointing downwards. With the locations of the corners of the environment known, perspective and fisheye distortion can be corrected with standard OpenCV operations.
 
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk.gif" align="centre" width="400" ></a>
@@ -43,16 +43,16 @@ The capture setup consists of a cheap webcam on an angled tripod, pointing downw
 
 ## Building an Environment
 
-With the above setup, we can implement a state-action-reward loop, which forms the basis of an RL environment. The robot would walk forth, collect data, train on that data and repeat the process using the RL algorithm of choice. 
+With the above setup, we can implement a state-action-reward loop, which forms the basis of the MDP. The robot would walk forth, collect data, train on that data using one's RL algorithm of choice, before resetting. 
 
-* State consists of sensor inputs, absolute position, orientation, servo positions, creating a 22-dimensional vector (simplified version removes sensor data)
-* Actions are 8 dimensions, consisting of either new servo positions or deltas between the current position to the next.
-* Reward is based on position, with +2 if it reaches the end of the field, -1 if it goes too far off the side and up to 1 for moving from left to right. (velocity dotted with the normalised orientation vector in the simplified version)
+* State consists of sensor inputs, absolute position, orientation, servo positions, creating a 22-dimensional vector (The simplified version of the environment removes sensor inputs, reducing the dimensionality to 12)
+* Actions are 8 dimensional vectors representing either new absolute servo positions or deltas between the current position to the next.
+* Reward is based on position, with +2 if it reaches the end of the field, -1 if it goes too far off the side and up to 1 for moving from left to right. The simplfied version of the envionment has the velocity dotted with the normalised orientation vector as the reward (essentially the forward speed).
 
 A hand engineered walk cycle is also implemented. This was done for three reasons:
 * Given a target and the robot's position, you can let the robot move up/down/left/right until it reached the target. This gives us a reliable method of resetting the robot's position after running an episode.
 * We can collect data on this fixed walk cycle (in particular accelerometer/gyro data) in order to pretrain policiy/value functions.
-* This makes room for lots of fun future, non deep learning projects. I can simply map the commands to keyboard/some other controller, and we basically have a walker which can reliably move in any direction.
+* This makes room for lots of fun, future, non deep-learning projects. I can simply map the commands to keyboard/some other controller, and we basically have a walker which can reliably move in any direction.
 
 ## Implementing and Running AAC
 
