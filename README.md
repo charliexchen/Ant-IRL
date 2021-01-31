@@ -3,14 +3,14 @@
 Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym library. This project aims to achieve three goals:
 * Build a physical robot in a similar configuration to Ant-v2
 * Train Actor Critic on a physical environment with no simulation
-* Keep me sane over the course of the third national lockdown
+* Use Haiku with JAX (https://github.com/deepmind/dm-haiku) on an end to end project
 
+...in addition to staying sane over the third lock down in the UK.
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk_comparison.gif" align="centre" width="800" >
  </p>
 <p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay in the simplified environment. Left: pretrained agent with some random noise in actions. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
 
-This also allows me to test out Haiku with JAX (https://github.com/deepmind/dm-haiku), which is a relatively new ML framework used at Google Deepmind.
 
 ## Building the Robot
 
@@ -56,7 +56,7 @@ A hand engineered walk cycle is also implemented. This was done for three reason
 
 ## Implementing and Running AAC
 
-I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, even though the overall feature gap isn't huge. I especially liked how for autograd, we use grad which is treated like a function operator much like how gradients are represented mathematically.
+I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, even though the overall feature gap isn't huge compared to other frameworks. For example, I especially liked how for autograd, we use grad which is treated like a function operator much like how gradients are represented mathematically.
 
 I make the predictor and AAC class as generic as possible for future projects, and tested that it works on CartPole.
 
@@ -66,3 +66,8 @@ Since this is a physical environment with one agent, we are very data constraine
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/env_walk.gif" align="centre" width="400" >  
  </p>
 <p align="center"><i> <sub>Running multiple episodes with fixed agent in the environment to collect training data. Red rectangles terminate with negative reward, green with positive reward. After an episode, the agent returns to the red circle to reset the environment. Note the aruco markers used to ensure consistent perspective in the corners of the environment. </sub></i> </p>
+
+Other things to note about the AAC implementation:
+* The environment runs at 30fps (bounded by the frame rate of the camera). This can be downsampled by simply issuing a new action only every x frames. This can give the NNs a longer effective time horizon, in addition to making the setup less sensitive to latency in the camera, sensors and servo controller.
+* The problem can be further simplified by imposing symmetries into the robot's actor, though this does remove the robot's ability to turn.
+* In order to learn a continuous action space, the actor simply returns the mean values of a normal distribution. The variance is fixed, but it can also be the output of the actor.
