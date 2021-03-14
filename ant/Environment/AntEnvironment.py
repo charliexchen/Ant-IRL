@@ -328,7 +328,7 @@ if __name__ == "__main__":
         return next(frames)
 
     critic = HaikuPredictor.get_model_from_saved_file(
-        "Environment/training_configs/selected_critic.p"
+        "training_configs/selected_critic.p"
     )
     env = AntIRLEnvironment()
     env.episode_counter = 394

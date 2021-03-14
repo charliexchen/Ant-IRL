@@ -13,7 +13,7 @@ from collections import deque
 from functools import partial
 from jax import jit
 
-from AntController.AntEnvironment import EpisodeData
+from Environment.AntEnvironment import EpisodeData
 from HaikuHelpers.HaikuPredictor import HaikuPredictor
 from HaikuHelpers.JaxUtils import normal_density
 
@@ -223,8 +223,8 @@ class HaikuActorCritic:
 
 class HaikuContinuousActorCritic(HaikuActorCritic):
     """
-    For fixed_cycle_configs in continuous action spaces. This considers the policy to be a normal distribution with the NN output being
-    the mean (and possibly the variance in the future)
+    For fixed_cycle_configs in continuous action spaces. This considers the policy to be a normal distribution with the
+    NN output being the mean (and possibly the variance in the future)
     """
 
     def __init__(self, params):
@@ -257,6 +257,33 @@ class HaikuContinuousActorCritic(HaikuActorCritic):
         loss, gradient = jax.value_and_grad(
             self._advantage_scaled_log_likelihoods_normal
         )(actor_params, states, actions, advantages)
+        update, new_optimizer_state = self.actor.optimizer.update(
+            gradient, optimizer_state
+        )
+        return optax.apply_updates(actor_params, update), new_optimizer_state, loss
+
+    def _ppo_loss(
+        self, actor_params, states, actions, advantages, old_prob, epsilon, weight
+    ):
+        """
+        Calculate the clipped PPO loss according to https://arxiv.org/pdf/1707.06347.pdf
+        """
+        means = self.actor._evaluate(actor_params, states)
+        r = jnp.divide(normal_density(means, self.noise_std, actions), old_prob)
+
+        clipped_r = jnp.clip(r, 1-epsilon, 1+epsilon)
+        clipped_loss = jnp.min(jnp.multiply(r, advantages), jnp.multiply(clipped_r, advantages))
+
+        # negative since we want to ascend this
+        return -jnp.sum(jnp.multiply(clipped_loss, weight))
+
+    @functools.partial(jax.jit, static_argnums=0)
+    def _train_continuous_actor_ppo(
+        self, actor_params, states, actions, advantages, optimizer_state, old_prob, epsilon, weight
+    ):
+        loss, gradient = jax.value_and_grad(
+            self._ppo_loss
+        )(actor_params, states, actions, advantages, old_prob, epsilon, weight)
         update, new_optimizer_state = self.actor.optimizer.update(
             gradient, optimizer_state
         )

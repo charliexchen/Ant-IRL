@@ -11,8 +11,8 @@ from HaikuHelpers.HaikuPredictor import HaikuPredictor
 
 
 class AntActorCritic(HaikuActorCritic):
-    """ fixed_cycle_configs with some special logic for the ant environment e.g. rendering text and value outputs, frozen robot
-    recovery """
+    """ fixed_cycle_configs with some special logic for the ant environment e.g. rendering text and value outputs,
+    frozen robot recovery """
 
     def __init__(self, params, ant_env):
         super().__init__(params)
@@ -75,6 +75,7 @@ class AntActorCritic(HaikuActorCritic):
         self.param_queue["actor_params"].append(copy.deepcopy(self.actor.params))
 
     def reset_to_previous_version(self, bad_version_count):
+        """Disaster recovery e.g. if the gradients explode"""
         print("Rolling back to a previous version...")
         for _ in range(bad_version_count):
             self.param_queue["critic_params"].pop()

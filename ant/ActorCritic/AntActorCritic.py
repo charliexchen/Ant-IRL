@@ -5,7 +5,7 @@ import time
 import yaml
 from collections import deque
 
-from AntController.AntEnvironment import AntIRLEnvironmentMultiStep, AntIRLEnvironment
+from Environment.AntEnvironment import AntIRLEnvironmentMultiStep, AntIRLEnvironment
 from HaikuHelpers.HaikuActorCritic import HaikuContinuousActorCritic, EpisodeWithValue
 from HaikuHelpers.HaikuPredictor import HaikuPredictor
 
@@ -90,7 +90,7 @@ class AntActorCritic(HaikuContinuousActorCritic):
 
 
 if __name__ == "__main__":
-    path = "Environment/training_configs/fixed_cycle_acc_config.yaml"
+    path = "training_configs/fixed_cycle_configs/fixed_cycle_acc_config.yaml"
     with open(path) as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
 
