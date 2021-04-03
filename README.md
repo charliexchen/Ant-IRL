@@ -32,7 +32,7 @@ The Robot's location and orientation relative to the environment is detected via
 <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/camera.png" width="1000">
 </p>
-<p align="center"><i> <sub>Using OpenCV to correct the raw webcam input. There is a small but acceptable amount of parallax error.</sub></i></p>
+<p align="center"><i> <sub>Using OpenCV to correct the raw webcam input. Note the small amount of parallax if the camera is not directly overhead. This is usually small enough to not affect the results.</sub></i></p>
 
 The capture setup consists of a cheap webcam on an angled tripod, pointing downwards. With the locations of the corners of the environment known, perspective and fisheye distortion can be corrected with standard OpenCV operations.
 
