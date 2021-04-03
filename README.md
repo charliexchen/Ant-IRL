@@ -70,4 +70,17 @@ Since this is a physical environment with one agent, we are very data constraine
 Other things to note about the AAC implementation:
 * The environment runs at 30fps (bounded by the frame rate of the camera). This can be downsampled by simply issuing a new action only every x frames. This can give the NNs a longer effective time horizon, in addition to making the setup less sensitive to latency in the camera, sensors and servo controller.
 * The problem can be further simplified by imposing symmetries into the robot's actor, though this does remove the robot's ability to turn.
-* In order to learn a continuous action space, the actor simply returns the mean values of a normal distribution. The variance is fixed, but it can also be the output of the actor.
+* In order to learn a continuous action space, the actor simply returns the mean values of a normal distribution. The variance is fixed for exploration, but it can also be the output of the actor.
+
+Some best practices:
+* Normalise the input and ouput of the NNs so the values across the layers are of similar magnitude
+* Offline training/hyperparameter tuning uses train/dev/test sets to prevent overfitting
+* Experiment configurations are separated into config files
+* End to end tests for major components in order to ensure correctness
+
+## References
+
+* Challenges of Real-World Reinforcement Learning -- This is a deepmind paper which gave a high level overview of the kind of problems I'm going to encounter, and served as a good jumping off point.
+* Automated DeepReinforcement Learning Environment for Hardware of a Modular Legged Robot -- A Disney research paper on getting various configurations to walk using DDPG and TRPO on a modular walking robot. Pretty cool, and gave me an idea about possible RL algorithm candidates. This paper actually trained the agent starting with one leg and increasing the number as legs as you go.
+* Optimizing walking of a humanoid robot using reinforcement learning -- A masters thesis from university of warsaw using AAC. My architecture ended up being pretty similar to this one.
+* RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning -- A paper which also builds a open source robot, and trains some walk on it. This was published AFTER I had done most of the work here, so that was a little annoying. However, this design used much more expensive servos (each servo cost more than my robot put together) which has inbuilt sensors, superior control and full 360 rotation, and I think that might be worth investing in...
