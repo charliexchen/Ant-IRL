@@ -78,9 +78,9 @@ Other things to note about the AAC implementation:
 * In order to learn a continuous action space, the actor simply returns the mean values of a normal distribution. The variance is fixed for exploration, but it can also be the output of the actor.
 *
 <p float="left" align="center">
-  <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/crit_loss.png" width="350" />
- <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/act_loss.png" width="350" />
- <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/episodic_reward.png" width="350" />
+  <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/crit_loss.png" width="300" />
+ <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/act_loss.png" width="300" />
+ <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/episodic_reward.png" width="300" />
 </p>
 <p align="center"><i> <sub>Left: loss function at each episode of the value critic. Given AAC is on-policy, we can expect this value to not go down as long as the policy has not converged. Middle: objective of the actor policy. This is the log-likelihood scaled advantage, and so we expect it to go up as the agent improves. Right: Episodic cumulative reward -- the agent is moving faster as the policy improves.</sub></i> </p>
 Some best practices:
