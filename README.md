@@ -62,7 +62,7 @@ A hand engineered walk cycle is also implemented. This was done for three reason
 <p align="center">
   <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/manual_walk.gif" align="centre" width="400" ></a>
 </p>
-<p align="center"><i> <sub>Walking to specified locations by combining the camera and the hand engineered gait. This is used to reset the environment</sub></i></p>
+<p align="center"><i> <sub>Walking to specified locations by combining the camera and the hand engineered gait. This is used to reset the environment.</sub></i></p>
 
 ## Implementing and Running AAC
 
@@ -89,13 +89,14 @@ Some best practices:
 * End to end tests for major components in order to ensure correctness
 
 ## References
-
+Main papers I consulted:
 * [Challenges of Real-World Reinforcement Learning](https://arxiv.org/abs/1904.12901) -- This is a deepmind paper which gave a high level overview of the kind of problems I'm going to encounter, and served as a good jumping off point.
 * [Automated DeepReinforcement Learning Environment for Hardware of a Modular Legged Robot](https://ieeexplore.ieee.org/document/8442201) -- A Disney research paper on getting various configurations to walk using DDPG and TRPO on a modular walking robot. Pretty cool, and gave me an idea about possible RL algorithm candidates. This paper actually trained the agent starting with one leg and increasing the number as legs as you go.
 * [Optimizing walking of a humanoid robot using reinforcement learning](https://www.researchgate.net/publication/267024754_Reinforcement_Learning_with_Experience_Replay_for_Model-Free_Humanoid_Walking_Optimization) -- A masters thesis from university of warsaw using AAC. My architecture ended up being pretty similar to this one.
 * [RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning](https://arxiv.org/abs/2011.03085) -- A paper which also builds a open source robot, and trains some walk on it. This was published AFTER I had done most of the work here, so that was a little annoying. However, this design used much more expensive servos (each servo cost more than my robot put together) which has inbuilt sensors, superior control and full 360 rotation, and I think that might be worth investing in...
 
-
+Other resources
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant.png" align="centre" width="400" >  
  </p>
+ <p align="center"><i> <sub>You made it to the end! Thank you for reading! </sub></i> </p>
