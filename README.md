@@ -17,27 +17,22 @@ Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym libr
 First, the robot was designed using Siemens Solid Edge CE (a powerful but free CAD software) and then 3D printed using my Creality Ender 3. The design consists of 8 servos in a similar configuration to Ant-v2 (albeit the forelegs are shorter to reduce the load on the tiny 9g servos). For control, I used an Arduino Nano which communicates with my desktop via USB serial and the servo controller via i2c. The position of each servo can be manipulated by sending two bytes of data.
 
 <p align="center">
-   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/assem.png" width="800">
+   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/assem.png" width="1000">
 </p>
 <p align="center"><i> <sub>Design, print and assembly process for the robot</sub></i> </p>
 
 For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050 sensor board's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman/complement filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
 
-<p align="center">
-  <a href="url"><img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant_irl.png" align="centre" width="300" ></a>
-</p>
-<p align="center"><i> <sub>"Don't talk to me or my son ever again."</sub></i> </p>
-
-The robot runs on a 5v 2A DC power supply. Power and USB connection is maintained using 6 thin enamelled copper wires. This minimises any forces a stiff USB/power cable might impart onto the robot.
+The robot runs on a 5v 2A DC power supply. Power and USB connection is maintained using 6 thin enamelled copper wires (usually used for electromagnets). This minimises any forces a stiff USB/power cable might impart onto the robot.
 
 ## Location Detection
 
-The Robot's location and orientation relative to the environment is detected via the large aruco marker on top of the robot and markers on the corners of the environment. This was achieved with the aruco module in OpenCV. Under the correct lighting conditions, we can have the location of the robot over 99% of the time, and we can resort to last frame position or interpolating for any missing frames steps.
+The Robot's location and orientation relative to the environment is detected via the large aruco marker on top of the robot and markers on the corners of the environment. This was achieved with the aruco module in OpenCV. Under the correct lighting conditions, we can have the location of the robot over 99% of the time, and we can resort to last frame position or interpolating for any missing frames.
 
 <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/camera.png" width="800">
 </p>
-<p align="center"><i> <sub></sub></i>Using OpenCV to correct the raw webcam input. There is a small amount of parallax error, but this is negligible for our purposes.</p>
+<p align="center"><i> <sub>Using OpenCV to correct the raw webcam input. There is a small but acceptable amount of parallax error.</sub></i></p>
 
 The capture setup consists of a cheap webcam on an angled tripod, pointing downwards. With the locations of the corners of the environment known, perspective and fisheye distortion can be corrected with standard OpenCV operations.
 
@@ -93,7 +88,7 @@ Main papers I consulted:
 * [Challenges of Real-World Reinforcement Learning](https://arxiv.org/abs/1904.12901) -- This is a deepmind paper which gave a high level overview of the kind of problems I'm going to encounter, and served as a good jumping off point.
 * [Automated DeepReinforcement Learning Environment for Hardware of a Modular Legged Robot](https://ieeexplore.ieee.org/document/8442201) -- A Disney research paper on getting various configurations to walk using DDPG and TRPO on a modular walking robot. Pretty cool, and gave me an idea about possible RL algorithm candidates. This paper actually trained the agent starting with one leg and increasing the number as legs as you go.
 * [Optimizing walking of a humanoid robot using reinforcement learning](https://www.researchgate.net/publication/267024754_Reinforcement_Learning_with_Experience_Replay_for_Model-Free_Humanoid_Walking_Optimization) -- A masters thesis from university of warsaw using AAC. My architecture ended up being pretty similar to this one.
-* [RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning](https://arxiv.org/abs/2011.03085) -- A paper which also builds a open source robot, and trains some walk on it. This was published AFTER I had done most of the work here, so that was a little annoying. However, this design used much more expensive servos (each servo cost more than my robot put together) which has inbuilt sensors, superior control and full 360 rotation, and I think that might be worth investing in...
+* [RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning](https://arxiv.org/abs/2011.03085) -- A paper which also builds a open source robot, and trains some walk on it. This was published AFTER I had done most of CAD work, so that was a little annoying. However, this design used much more expensive servos (each servo cost more than my robot put together) which has inbuilt sensors, superior control and full 360 rotation, and I think that might be worth investing in...
 
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant.png" align="centre" width="400" >  
