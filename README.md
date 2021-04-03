@@ -19,7 +19,7 @@ First, the robot was designed using Siemens Solid Edge CE (a powerful but free C
 <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/assem.png" width="800">
 </p>
-<p align="center"><i> <sub>Design, print and assembly process for the ant</sub></i> </p>
+<p align="center"><i> <sub>Design, print and assembly process for the robot</sub></i> </p>
 
 For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050 sensor board's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman/complement filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
 
@@ -37,7 +37,7 @@ The Robot's location and orientation relative to the environment is detected via
 <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/camera.png" width="800">
 </p>
-<p align="center"><i> <sub></sub></i>Using OpenCV to correct the raw webcam input</p>
+<p align="center"><i> <sub></sub></i>Using OpenCV to correct the raw webcam input. There is a small amount of parallax error, but this is negligible for our purposes.</p>
 
 The capture setup consists of a cheap webcam on an angled tripod, pointing downwards. With the locations of the corners of the environment known, perspective and fisheye distortion can be corrected with standard OpenCV operations.
 
