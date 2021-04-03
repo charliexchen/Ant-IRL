@@ -7,7 +7,7 @@ Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym libr
 
 ...in addition to staying sane over the third lock down in the UK.
  <p align="center">
-   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk_comparison.gif" align="centre" width="800" >
+   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/walk_comparison.gif" align="centre" width="1000" >
  </p>
 <p align="center"><i> <sub>Improvements in the robot's speed after training with AAC with experience replay in the simplified environment. Left: pretrained agent with some random noise in actions. Middle: agent after optimising for 33 episodes. Right: agent after optimising for 91 episodes</sub></i> </p>
 
@@ -30,7 +30,7 @@ The robot runs on a 5v 2A DC power supply. Power and USB connection is maintaine
 The Robot's location and orientation relative to the environment is detected via the large aruco marker on top of the robot and markers on the corners of the environment. This was achieved with the aruco module in OpenCV. Under the correct lighting conditions, we can have the location of the robot over 99% of the time, and we can resort to last frame position or interpolating for any missing frames.
 
 <p align="center">
-   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/camera.png" width="800">
+   <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/camera.png" width="1000">
 </p>
 <p align="center"><i> <sub>Using OpenCV to correct the raw webcam input. There is a small but acceptable amount of parallax error.</sub></i></p>
 
