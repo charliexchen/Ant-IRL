@@ -76,7 +76,13 @@ Other things to note about the AAC implementation:
 * The environment runs at 30fps (bounded by the frame rate of the camera). This can be downsampled by simply issuing a new action only every x frames. This can give the NNs a longer effective time horizon, in addition to making the setup less sensitive to latency in the camera, sensors and servo controller.
 * The problem can be further simplified by imposing symmetries into the robot's actor, though this does remove the robot's ability to turn.
 * In order to learn a continuous action space, the actor simply returns the mean values of a normal distribution. The variance is fixed for exploration, but it can also be the output of the actor.
-
+*
+<p float="left" align="center">
+  <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/crit_loss.png" width="350" />
+ <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/act_loss.png" width="350" />
+ <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/episodic_reward.png" width="350" />
+</p>
+<p align="center"><i> <sub>Left: loss function at each episode of the value critic. Given AAC is on-policy, we can expect this value to not go down as long as the policy has not converged. Middle: objective of the actor policy. This is the log-likelihood scaled advantage, and so we expect it to go up as the agent improves. Right: Episodic cumulative reward -- the agent is moving faster as the policy improves.</sub></i> </p>
 Some best practices:
 * Normalise the input and ouput of the NNs so the values across the layers are of similar magnitude
 * Offline training/hyperparameter tuning uses train/dev/test sets to prevent overfitting
