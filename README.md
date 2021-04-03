@@ -95,8 +95,7 @@ Main papers I consulted:
 * [Optimizing walking of a humanoid robot using reinforcement learning](https://www.researchgate.net/publication/267024754_Reinforcement_Learning_with_Experience_Replay_for_Model-Free_Humanoid_Walking_Optimization) -- A masters thesis from university of warsaw using AAC. My architecture ended up being pretty similar to this one.
 * [RealAnt: An Open-Source Low-Cost Quadruped for Research in Real-World Reinforcement Learning](https://arxiv.org/abs/2011.03085) -- A paper which also builds a open source robot, and trains some walk on it. This was published AFTER I had done most of the work here, so that was a little annoying. However, this design used much more expensive servos (each servo cost more than my robot put together) which has inbuilt sensors, superior control and full 360 rotation, and I think that might be worth investing in...
 
-Other resources
  <p align="center">
    <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/ant.png" align="centre" width="400" >  
  </p>
- <p align="center"><i> <sub>You made it to the end! Thank you for reading! </sub></i> </p>
+ <p align="center"><i> <sub>You've made it to the end! Thank you for reading! </sub></i> </p>
