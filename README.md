@@ -63,7 +63,7 @@ A hand engineered walk cycle is also implemented. This was done for three reason
 
 I implemented Advantage Actor-Critic using JAX and Haiku. This was a fun framework to use since it is a lot more flexible compared to the others I've tried in the past, such as Keras. Almost any numpy operation can be accelerated, vectorised or differentiated, so I can see this handling more unconventional architectures much more gracefully, even though the overall feature gap isn't huge compared to other frameworks. For example, I especially liked how for autograd, we use grad which is treated like a function operator much like how gradients are represented mathematically.
 
-I make the predictor and AAC class as generic as possible for future projects, and tested that it works on CartPole.
+I made the predictor and AAC class as generic as possible for future projects, and tested that it works on CartPole.
 
 Since this is a physical environment with one agent, we are very data constrained. As such, I first ran a number of episodes using the fixed walk cycle. We collect this data and then use it to pretrain the value function and an actor based on a fixed gait. We then use the above AAC implementation along with experience replay to improve the agent. The initial data also allows for some hyperparameter selection, which was done with a simple random search. 
 
@@ -83,11 +83,12 @@ Other things to note about the AAC implementation:
  <img src="https://github.com/charliexchen/Ant-IRL/blob/main/Assets/readme_assets/episodic_reward.png" width="250" />
 </p>
 <p align="center"><i> <sub>Fig 1: loss function at each episode of the value critic. Given AAC is on-policy, we can expect this value to not go down as long as the policy has not converged. Fig 2: objective of the actor policy. This is the log-likelihood scaled advantage, and so we expect it to go up as the agent improves. Fig 3: Episodic cumulative reward -- the agent is moving faster as the policy improves.</sub></i> </p>
-Some best practices:
+
+Tuning RL algorithms is hard. To make my life easier, I followed the best some best practices:
 * Normalise the input and ouput of the NNs so the values across the layers are of similar magnitude
 * Offline training/hyperparameter tuning uses train/dev/test sets to prevent overfitting
 * Experiment configurations are separated into config files
-* End to end tests for major components in order to ensure correctness
+* End to end tests for all major components in order to ensure correctness
 
 ## References
 Main papers I consulted:
