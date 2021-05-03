@@ -21,7 +21,9 @@ Ant-v2 (A.K.A Antony) is now a fairly standard RL task from the Open AI gym libr
 First, the robot was designed using Siemens Solid Edge CE (a powerful but free CAD software) and then 3D printed using my Creality Ender 3. The design consists of 8 servos in a similar configuration to Ant-v2 (albeit the forelegs are shorter to reduce the load on the tiny 9g servos). For control, I used an Arduino Nano which communicates with my desktop via USB serial and the servo controller via i2c. The position of each servo can be manipulated by sending two bytes of data.
 
 
-For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050 sensor board's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman/complement filters) for the sensors. As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
+For sensing, the Arduino is also connected to a gyro/accelerometer via i2c, which gives us acceleration, the gravity vector and Euler angles. Using the MPU-6050 sensor board's onboard DMP feature, it is not necessary to implement further noise reduction (such as Kalman/complement filters) for the sensors. Unfortunately, I eventually had to discard this data since it was just wasn't that helpful for my robot.
+
+As a future upgrade, I have designed micro switch holders for the forelegs which will allow the robot to know if the legs have contacted the ground.
 
 The robot runs on a 5v 2A DC power supply. Power and USB connection is maintained using 6 thin enamelled copper wires (usually used for electromagnets). This minimises any forces a stiff USB/power cable might impart onto the robot.
 
