@@ -67,7 +67,5 @@ void loop() {
     pwm.writeMicroseconds(raw_servo_id, raw_ms_command);
   }
   Serial.write((byte*)&dp, sizeof(dp));
-  pwm.writeMicroseconds(0, 600);
   delay(10);
-  pwm.writeMicroseconds(0, 1500);
 }
