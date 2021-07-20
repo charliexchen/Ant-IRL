@@ -48,7 +48,7 @@ void loop() {
   if (Serial.available() > 0) {
     while (Serial.available() > 0) {
       incomingByte = Serial.read();
-      raw_command = (raw_command << 7) | (incomingByte);
+      raw_command = (raw_command << 7) | (incomingByte & 127);
       bool is_last_bit = (incomingByte & 128) == 128;
       if (is_last_bit) {
         int servo_id = raw_command & 7;
